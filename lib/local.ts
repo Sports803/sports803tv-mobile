@@ -43,7 +43,13 @@ export async function getPrediction(eventId: string) { return (await readPredict
 export async function savePrediction(eventId: string, prediction: MatchPrediction) { const current = await readPredictions(); const next = { ...current, [eventId]: prediction }; await AsyncStorage.setItem(PREDICTIONS_KEY, JSON.stringify(next)); return prediction; }
 export const getFavoriteSports = () => readList(FAVORITE_SPORTS_KEY);
 export async function toggleFavoriteSport(sport: string) { const current = await getFavoriteSports(); const next = current.includes(sport) ? current.filter((value) => value !== sport) : [sport, ...current]; await writeList(FAVORITE_SPORTS_KEY, next); return next; }
-export async function getOnboardingComplete() { return (await AsyncStorage.getItem(ONBOARDING_COMPLETE_KEY)) === "true"; }
+export async function getOnboardingComplete() {
+  try {
+    return (await AsyncStorage.getItem(ONBOARDING_COMPLETE_KEY)) === "true";
+  } catch {
+    return false;
+  }
+}
 export async function setOnboardingComplete(completed = true) { await AsyncStorage.setItem(ONBOARDING_COMPLETE_KEY, String(completed)); return completed; }
 export async function getNotificationsEnabled() { return (await AsyncStorage.getItem(NOTIFICATIONS_ENABLED_KEY)) === "true"; }
 export async function setNotificationsEnabled(enabled: boolean) { await AsyncStorage.setItem(NOTIFICATIONS_ENABLED_KEY, String(enabled)); return enabled; }

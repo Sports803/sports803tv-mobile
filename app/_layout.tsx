@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import * as Notifications from "expo-notifications";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
-import { Platform } from "react-native";
+import { ActivityIndicator, Platform, View } from "react-native";
 import { useFonts } from "expo-font";
 import { Poppins_700Bold, Poppins_600SemiBold } from "@expo-google-fonts/poppins";
 import { Inter_400Regular, Inter_500Medium } from "@expo-google-fonts/inter";
@@ -23,6 +23,7 @@ import type { EdgeInsets, Metrics, Rect } from "react-native-safe-area-context";
 import { trpc, createTRPCClient } from "@/lib/trpc";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
 import { getOnboardingComplete } from "@/lib/local";
+import { startupRouteFor } from "@/lib/startup-contract";
 
 const DEFAULT_WEB_INSETS: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 const DEFAULT_WEB_FRAME: Rect = { x: 0, y: 0, width: 0, height: 0 };
@@ -37,7 +38,8 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const router = useRouter();
-  const [fontsLoaded] = useFonts({ Poppins_700Bold, Poppins_600SemiBold, Inter_400Regular, Inter_500Medium });
+  const [fontsLoaded, fontError] = useFonts({ Poppins_700Bold, Poppins_600SemiBold, Inter_400Regular, Inter_500Medium });
+  const fontsReady = fontsLoaded || Boolean(fontError);
   const initialInsets = initialWindowMetrics?.insets ?? DEFAULT_WEB_INSETS;
   const initialFrame = initialWindowMetrics?.frame ?? DEFAULT_WEB_FRAME;
 
@@ -46,12 +48,16 @@ export default function RootLayout() {
   const [startupChecked, setStartupChecked] = useState(false);
 
   useEffect(() => {
-    if (!fontsLoaded) return;
+    if (!fontsReady) return;
+    let active = true;
     void getOnboardingComplete().then((completed) => {
-      if (!completed) router.replace("/onboarding" as any);
+      if (!active) return;
+      const route = startupRouteFor(completed);
+      if (route) router.replace(route as any);
       setStartupChecked(true);
     });
-  }, [fontsLoaded, router]);
+    return () => { active = false; };
+  }, [fontsReady, router]);
 
   useEffect(() => {
     if (Platform.OS === "web") return;
@@ -107,7 +113,13 @@ export default function RootLayout() {
     };
   }, [initialInsets, initialFrame]);
 
-  if (!fontsLoaded || !startupChecked) return null;
+  if (!fontsReady || !startupChecked) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#07101f" }}>
+        <ActivityIndicator color="#f5b800" size="large" />
+      </View>
+    );
+  }
 
   const content = (
     <GestureHandlerRootView style={{ flex: 1 }}>

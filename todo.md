@@ -130,3 +130,4 @@
 - [x] Add the first live promotion and curated article through the protected owner dashboard configuration
 - [x] Select current Firebase event and Live TV channel IDs for featured placement
 - [x] Confirm the public owner configuration reaches the mobile app and provide physical Android onboarding/notification test steps
+- [x] Diagnose and fix the blank Sports803TV app preview reported after the owner-managed Home update
