@@ -142,3 +142,4 @@
 - [x] Add compatible Motorsport, Basketball, Fighting, and Football category widgets with auto-poster tag guidance
 - [x] Correct the invalid Blogger HTML widget identifier reported during theme import
 - [x] Redesign the Blogger app-install and Live TV widgets for compact responsive phone, tablet, and desktop layouts
+- [x] Fix the Browse by sport mobile widget overlay so it no longer covers other content
