@@ -114,3 +114,5 @@
 - [x] Implement the selected live GitHub Pages owner dashboard backed by role-protected Sports803TV administration endpoints
 - [x] Protect owner configuration for Firebase content, featured rails, advertising, donation links, status messaging, and notifications from public modification
 - [x] Add permission-aware native match calendar export, on-device match prediction choices, and invitation sharing without adding unconsented tracking
+- [ ] Create a private GitHub repository for the validated Sports803TV source and push the current checkpoint
+- [ ] Configure the static owner dashboard for GitHub Pages and report its URL plus required server settings
