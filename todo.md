@@ -141,3 +141,4 @@
 - [x] Reduce the oversized mobile Live TV/widget presentation shown on the Blogger site while retaining readable controls
 - [x] Add compatible Motorsport, Basketball, Fighting, and Football category widgets with auto-poster tag guidance
 - [x] Correct the invalid Blogger HTML widget identifier reported during theme import
+- [x] Redesign the Blogger app-install and Live TV widgets for compact responsive phone, tablet, and desktop layouts
