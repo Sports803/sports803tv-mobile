@@ -1,48 +1,289 @@
-import { ScrollView, Text, View, TouchableOpacity } from "react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  FlatList,
+  Image,
+  Pressable,
+  RefreshControl,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from "react-native";
+import { useRouter } from "expo-router";
 
+import { AdSlot, AD_UNITS } from "@/components/ad-slot";
 import { ScreenContainer } from "@/components/screen-container";
+import {
+  categoryLabel,
+  eventStatus,
+  eventTime,
+  fetchEvents,
+  type EventStatus,
+  type SportsEvent,
+} from "@/lib/sports";
+import { getFavorites, getHistory, getLeagueFavorites, getTeamFavorites, toggleFavorite } from "@/lib/local";
 
-/**
- * Home Screen - NativeWind Example
- *
- * This template uses NativeWind (Tailwind CSS for React Native).
- * You can use familiar Tailwind classes directly in className props.
- *
- * Key patterns:
- * - Use `className` instead of `style` for most styling
- * - Theme colors: use tokens directly (bg-background, text-foreground, bg-primary, etc.); no dark: prefix needed
- * - Responsive: standard Tailwind breakpoints work on web
- * - Custom colors defined in tailwind.config.js
- */
-export default function HomeScreen() {
+const categories = [
+  "all",
+  "football",
+  "basketball",
+  "nfl",
+  "hockey",
+  "baseball",
+  "motorsport",
+  "mma",
+  "other",
+];
+const statuses: ("all" | EventStatus)[] = ["all", "live", "upcoming"];
+const palette = {
+  surface: "#11182A",
+  elevated: "#17213A",
+  text: "#F7F8FC",
+  muted: "#9AA6BE",
+  red: "#E0102A",
+  border: "#26314A",
+  green: "#36D399",
+  gold: "#F4B740",
+};
+
+function TeamLogo({ uri, size = 40 }: { uri?: string; size?: number }) {
+  return uri ? (
+    <Image
+      source={{ uri }}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: palette.elevated,
+      }}
+    />
+  ) : (
+    <View
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: palette.elevated,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Text style={{ color: palette.muted, fontSize: size * 0.42 }}>⚽</Text>
+    </View>
+  );
+}
+
+function formatCountdown(event: SportsEvent) {
+  const remaining = eventTime(event) - Date.now();
+  if (remaining <= 0) return "Starting soon";
+  const minutes = Math.floor(remaining / 60_000);
+  return minutes >= 60 ? `Starts in ${Math.floor(minutes / 60)}h ${minutes % 60}m` : `Starts in ${minutes}m`;
+}
+
+function statusCopy(event: SportsEvent, now?: number) {
+  const status = eventStatus(event, now);
+  if (status === "live") return { label: "LIVE NOW", color: palette.red };
+  if (status === "ended") return { label: "ENDED", color: palette.muted };
+  return { label: "UPCOMING", color: palette.green };
+}
+
+function EventCard({
+  event,
+  favorite,
+  onFavorite,
+  onOpen,
+  width,
+}: {
+  event: SportsEvent;
+  favorite: boolean;
+  onFavorite: () => void;
+  onOpen: () => void;
+  width: number;
+}) {
+  const status = statusCopy(event);
   return (
-    <ScreenContainer className="p-6">
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View className="flex-1 gap-8">
-          {/* Hero Section */}
-          <View className="items-center gap-2">
-            <Text className="text-4xl font-bold text-foreground">Welcome</Text>
-            <Text className="text-base text-muted text-center">
-              Edit app/(tabs)/index.tsx to get started
-            </Text>
-          </View>
+    <Pressable
+      onPress={onOpen}
+      style={({ pressed }) => ({
+        backgroundColor: palette.surface,
+        borderColor: status.label === "LIVE NOW" ? palette.red : palette.border,
+        borderWidth: 1,
+        borderRadius: 18,
+        padding: 15,
+        marginBottom: 12,
+        width,
+        opacity: pressed ? 0.82 : 1,
+      })}
+      accessibilityRole="button"
+      accessibilityLabel={`Open ${event.homeName} versus ${event.awayName}`}
+    >
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <Text style={{ color: status.color, fontSize: 11, fontWeight: "800" }}>
+          ● {status.label}
+          {status.label === "UPCOMING" ? ` · ${formatCountdown(event)}` : ""}
+        </Text>
+        <Pressable onPress={onFavorite} hitSlop={12} accessibilityLabel={favorite ? "Remove favorite" : "Add favorite"}>
+          <Text style={{ color: favorite ? palette.gold : palette.muted, fontSize: 22 }}>{favorite ? "★" : "☆"}</Text>
+        </Pressable>
+      </View>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <TeamLogo uri={event.homeLogo} />
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: palette.text, fontSize: 16, fontWeight: "800" }} numberOfLines={1}>{event.homeName}</Text>
+          <Text style={{ color: palette.muted, fontSize: 12, marginVertical: 2 }}>vs</Text>
+          <Text style={{ color: palette.text, fontSize: 16, fontWeight: "800" }} numberOfLines={1}>{event.awayName || "Live broadcast"}</Text>
+        </View>
+        <TeamLogo uri={event.awayLogo} />
+      </View>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 14, paddingTop: 10, borderTopColor: palette.border, borderTopWidth: 1 }}>
+        <Text style={{ color: palette.muted, fontSize: 12, flex: 1 }} numberOfLines={1}>{event.competitionLabel || event.leagueName || categoryLabel(event.category)}</Text>
+        <Text style={{ color: palette.green, fontWeight: "800", fontSize: 12 }}>{event.channels.length ? "WATCH NOW" : "NO STREAM"}</Text>
+      </View>
+    </Pressable>
+  );
+}
 
-          {/* Example Card */}
-          <View className="w-full max-w-sm self-center bg-surface rounded-2xl p-6 shadow-sm border border-border">
-            <Text className="text-lg font-semibold text-foreground mb-2">NativeWind Ready</Text>
-            <Text className="text-sm text-muted leading-relaxed">
-              Use Tailwind CSS classes directly in your React Native components.
-            </Text>
+function PopularMatchCard({
+  event,
+  favorite,
+  onFavorite,
+  onOpen,
+  width,
+}: {
+  event: SportsEvent;
+  favorite: boolean;
+  onFavorite: () => void;
+  onOpen: () => void;
+  width: number;
+}) {
+  const status = statusCopy(event);
+  return (
+    <Pressable
+      onPress={onOpen}
+      style={({ pressed }) => ({
+        width,
+        minHeight: 164,
+        backgroundColor: palette.elevated,
+        borderColor: status.label === "LIVE NOW" ? palette.red : palette.border,
+        borderWidth: 1,
+        borderRadius: 18,
+        padding: 12,
+        marginBottom: 10,
+        opacity: pressed ? 0.82 : 1,
+      })}
+      accessibilityRole="button"
+      accessibilityLabel={`Open popular match ${event.homeName} versus ${event.awayName}`}
+    >
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 5, flex: 1 }}>
+          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: status.color }} />
+          <Text style={{ color: status.color, fontSize: 10, fontWeight: "900" }} numberOfLines={1}>{status.label}</Text>
+        </View>
+        <Pressable onPress={onFavorite} hitSlop={10} accessibilityLabel={favorite ? "Remove favorite" : "Add favorite"}>
+          <Text style={{ color: favorite ? palette.gold : palette.muted, fontSize: 18 }}>{favorite ? "★" : "☆"}</Text>
+        </Pressable>
+      </View>
+      <View style={{ alignItems: "center", marginTop: 10 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, width: "100%" }}>
+          <View style={{ alignItems: "center", flex: 1 }}>
+            <TeamLogo uri={event.homeLogo} size={34} />
+            <Text style={{ color: palette.text, fontSize: 11, fontWeight: "800", marginTop: 7, textAlign: "center" }} numberOfLines={2}>{event.homeName}</Text>
           </View>
-
-          {/* Example Button */}
-          <View className="items-center">
-            <TouchableOpacity className="bg-primary px-6 py-3 rounded-full active:opacity-80">
-              <Text className="text-background font-semibold">Get Started</Text>
-            </TouchableOpacity>
+          <Text style={{ color: palette.muted, fontSize: 11, fontWeight: "800" }}>VS</Text>
+          <View style={{ alignItems: "center", flex: 1 }}>
+            <TeamLogo uri={event.awayLogo} size={34} />
+            <Text style={{ color: palette.text, fontSize: 11, fontWeight: "800", marginTop: 7, textAlign: "center" }} numberOfLines={2}>{event.awayName || "Broadcast"}</Text>
           </View>
         </View>
-      </ScrollView>
-    </ScreenContainer>
+      </View>
+      <View style={{ marginTop: 10, paddingTop: 8, borderTopColor: palette.border, borderTopWidth: 1, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+        <Text style={{ color: palette.muted, fontSize: 10, flex: 1 }} numberOfLines={1}>{event.competitionLabel || event.leagueName || categoryLabel(event.category)}</Text>
+        <Text style={{ color: event.channels.length ? palette.green : palette.muted, fontSize: 10, fontWeight: "900" }}>{event.channels.length ? "WATCH" : "DETAILS"}</Text>
+      </View>
+    </Pressable>
   );
+}
+
+function Skeletons() {
+  return <View>{[1, 2, 3].map((item) => <View key={item} style={{ height: 145, borderRadius: 18, backgroundColor: palette.surface, marginBottom: 12, opacity: 0.65 }} />)}</View>;
+}
+
+const majorFootballCompetition = /premier league|epl|la liga|laliga|mls|saudi pro league|ligue 1|league 1|bundesliga|serie a|eredivisie|primeira liga|champions league|uefa champions|europa league|conference league|fa cup|coppa italia|copa del rey|dfb pokal|efl championship/i;
+
+function isMajorFootballMatch(event: SportsEvent) {
+  if (!/football|soccer/i.test(event.category)) return false;
+  const competition = [event.leagueName, event.competitionLabel].filter(Boolean).join(" ");
+  return majorFootballCompetition.test(competition);
+}
+
+function popularityScore(event: SportsEvent, now: number) {
+  const candidate = event as SportsEvent & Record<string, unknown>;
+  const explicit = [candidate.popularity, candidate.popularScore, candidate.priority, candidate.importance, candidate.featured]
+    .map((value) => typeof value === "number" ? value : value === true ? 100 : 0)
+    .reduce((sum, value) => sum + value, 0);
+  const liveBoost = eventStatus(event, now) === "live" ? 1000 : 0;
+  const streamBoost = event.channels.length ? 100 : 0;
+  return liveBoost + explicit + streamBoost;
+}
+
+export default function HomeScreen() {
+  const router = useRouter();
+  const { width: viewportWidth } = useWindowDimensions();
+  const [events, setEvents] = useState<SportsEvent[]>([]);
+  const [selected, setSelected] = useState("all");
+  const [query, setQuery] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<"all" | EventStatus>("all");
+  const [now, setNow] = useState(() => Date.now());
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [history, setHistory] = useState<string[]>([]);
+  const [teamFavorites, setTeamFavorites] = useState<string[]>([]);
+  const [leagueFavorites, setLeagueFavorites] = useState<string[]>([]);
+  const load = useCallback(async () => { setError(""); try { setEvents(await fetchEvents()); } catch (e) { setError(e instanceof Error ? e.message : "Could not load events"); } finally { setLoading(false); setRefreshing(false); } }, []);
+  useEffect(() => { void Promise.all([load(), getFavorites().then(setFavorites), getHistory().then(setHistory), getTeamFavorites().then(setTeamFavorites), getLeagueFavorites().then(setLeagueFavorites)]); }, [load]);
+  useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(timer); }, []);
+  const filtered = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    const rank: Record<EventStatus, number> = { live: 0, upcoming: 1, ended: 2 };
+    return events.filter((event) => {
+      const categoryMatch = selected === "all" || event.category === selected;
+      const currentStatus = eventStatus(event, now);
+      const statusMatch = currentStatus !== "ended" && (selectedStatus === "all" || currentStatus === selectedStatus);
+      const haystack = [event.homeName, event.awayName, event.leagueName, event.competitionLabel, event.category].filter(Boolean).join(" ").toLowerCase();
+      return categoryMatch && statusMatch && (!needle || haystack.includes(needle));
+    }).sort((a, b) => {
+      const preference = (event: SportsEvent) => teamFavorites.includes(event.homeName) || teamFavorites.includes(event.awayName || "") || leagueFavorites.includes(event.leagueName || "") || leagueFavorites.includes(event.competitionLabel || "") ? -1 : 0;
+      return preference(a) - preference(b) || rank[eventStatus(a, now)] - rank[eventStatus(b, now)] || eventTime(a) - eventTime(b);
+    });
+  }, [events, selected, selectedStatus, query, now, teamFavorites, leagueFavorites]);
+  const popular = useMemo(() => [...filtered]
+    .filter((event) => {
+      const status = eventStatus(event, now);
+      return (status === "live" || status === "upcoming") && isMajorFootballMatch(event);
+    })
+    .sort((a, b) => popularityScore(b, now) - popularityScore(a, now) || eventTime(a) - eventTime(b))
+    .slice(0, 6), [filtered, now]);
+  const recent = history.flatMap((id) => { const event = events.find((item) => item.id === id); return event && eventStatus(event, now) !== "ended" ? [event] : []; });
+  const setFav = async (id: string) => setFavorites(await toggleFavorite(id));
+  const gridGap = 10;
+  const columns = viewportWidth >= 800 ? 3 : 2;
+  const horizontalPadding = 32;
+  const cardWidth = Math.max(142, (viewportWidth - horizontalPadding - gridGap * (columns - 1)) / columns);
+  const openEvent = (event: SportsEvent) => router.push({ pathname: "/player" as any, params: { eventId: event.id } });
+  const competitionNames = Array.from(new Set(events.map((event) => event.leagueName || event.competitionLabel).filter(Boolean) as string[])).slice(0, 10);
+  const header = <View>
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 10, paddingBottom: 14 }}><View><Text style={{ color: palette.red, fontSize: 12, fontWeight: "900", letterSpacing: 1.5 }}>SPORTS 803</Text><Text style={{ color: palette.text, fontSize: 28, fontWeight: "900" }}>Today’s events</Text></View><Text style={{ color: palette.muted, fontSize: 22 }}>◉</Text></View>
+    <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: palette.surface, borderColor: palette.border, borderWidth: 1, borderRadius: 16, paddingHorizontal: 12, marginBottom: 12 }}><Text style={{ color: palette.muted, fontSize: 18, marginRight: 8 }}>⌕</Text><TextInput value={query} onChangeText={setQuery} placeholder="Search teams, leagues, sports" placeholderTextColor={palette.muted} returnKeyType="search" clearButtonMode="while-editing" accessibilityLabel="Search events" style={{ flex: 1, color: palette.text, paddingVertical: 12, fontSize: 14 }} />{query ? <Pressable onPress={() => setQuery("")} hitSlop={10} accessibilityLabel="Clear event search"><Text style={{ color: palette.muted, fontSize: 18 }}>×</Text></Pressable> : null}</View>
+    <FlatList horizontal showsHorizontalScrollIndicator={false} data={categories} keyExtractor={(item) => item} contentContainerStyle={{ gap: 8, paddingBottom: 16 }} renderItem={({ item }) => <Pressable onPress={() => setSelected(item)} style={{ backgroundColor: selected === item ? palette.red : palette.surface, borderColor: selected === item ? palette.red : palette.border, borderWidth: 1, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 }}><Text style={{ color: palette.text, fontWeight: "700", fontSize: 12 }}>{item === "all" ? "All" : categoryLabel(item)}</Text></Pressable>} />
+    <FlatList horizontal showsHorizontalScrollIndicator={false} data={statuses} keyExtractor={(item) => `status-${item}`} contentContainerStyle={{ gap: 8, paddingBottom: 12 }} renderItem={({ item }) => <Pressable onPress={() => setSelectedStatus(item)} style={{ backgroundColor: selectedStatus === item ? palette.elevated : "transparent", borderColor: selectedStatus === item ? palette.red : palette.border, borderWidth: 1, borderRadius: 18, paddingHorizontal: 13, paddingVertical: 8 }}><Text style={{ color: selectedStatus === item ? palette.text : palette.muted, fontWeight: "800", fontSize: 12 }}>{item === "all" ? "All statuses" : item === "live" ? "Live now" : "Upcoming"}</Text></Pressable>} />
+    {competitionNames.length > 0 ? <FlatList horizontal showsHorizontalScrollIndicator={false} data={competitionNames} keyExtractor={(item) => `competition-${item}`} contentContainerStyle={{ gap: 8, paddingBottom: 12 }} renderItem={({ item }) => <Pressable onPress={() => router.push({ pathname: "/competition" as any, params: { name: item } })} style={{ backgroundColor: palette.surface, borderColor: palette.border, borderWidth: 1, borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8 }}><Text style={{ color: palette.muted, fontWeight: "800", fontSize: 11 }}>{item}</Text></Pressable>} /> : null}
+    {popular.length > 0 ? <View style={{ marginBottom: 14 }}><View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 9 }}><View><Text style={{ color: palette.text, fontSize: 19, fontWeight: "900" }}>Popular matches</Text><Text style={{ color: palette.muted, fontSize: 11, marginTop: 2 }}>Top events right now</Text></View><Text style={{ color: palette.red, fontSize: 12, fontWeight: "900" }}>LIVE & FEATURED</Text></View><View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" }}>{popular.map((event) => <PopularMatchCard key={`popular-${event.id}`} event={event} width={cardWidth} favorite={favorites.includes(event.id)} onFavorite={() => void setFav(event.id)} onOpen={() => openEvent(event)} />)}</View></View> : null}
+    {recent.length > 0 ? <View style={{ marginBottom: 18 }}><Text style={{ color: palette.text, fontSize: 16, fontWeight: "800", marginBottom: 8 }}>Recently viewed</Text><FlatList horizontal showsHorizontalScrollIndicator={false} data={recent.slice(0, 5)} keyExtractor={(item) => item.id} contentContainerStyle={{ gap: 8 }} renderItem={({ item }) => <Pressable onPress={() => openEvent(item)} style={{ backgroundColor: palette.elevated, borderRadius: 12, padding: 10, width: 160 }}><Text style={{ color: palette.text, fontWeight: "700" }} numberOfLines={2}>{item.homeName} vs {item.awayName}</Text><Text style={{ color: palette.muted, fontSize: 11, marginTop: 4 }}>{item.leagueName || "Sports803TV"}</Text></Pressable>} /></View> : null}
+    <AdSlot unitId={AD_UNITS.homeBanner} />
+    {error ? <View style={{ backgroundColor: "#3A1520", borderRadius: 12, padding: 12, marginBottom: 14 }}><Text style={{ color: "#FFB7C1" }}>{error}</Text></View> : null}
+    <Text style={{ color: palette.text, fontSize: 19, fontWeight: "900", marginBottom: 12 }}>{query.trim() ? `${filtered.length} search result${filtered.length === 1 ? "" : "s"}` : selectedStatus !== "all" ? `${selectedStatus === "live" ? "Live now" : selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1)} · ${selected === "all" ? "All sports" : categoryLabel(selected)}` : selected === "all" ? "All sports" : categoryLabel(selected)}</Text>
+  </View>;
+  return <ScreenContainer containerClassName="bg-background" className="px-4"><FlatList key={`events-${columns}`} data={filtered} numColumns={columns} columnWrapperStyle={{ gap: gridGap }} keyExtractor={(item) => item.id} renderItem={({ item }) => <EventCard event={item} width={cardWidth} favorite={favorites.includes(item.id)} onFavorite={() => void setFav(item.id)} onOpen={() => openEvent(item)} />} ListHeaderComponent={header} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(); }} tintColor={palette.red} />} ListEmptyComponent={loading ? <Skeletons /> : <View style={{ paddingVertical: 60, alignItems: "center" }}><Text style={{ color: palette.text, fontSize: 18, fontWeight: "800" }}>No events found</Text><Text style={{ color: palette.muted, marginTop: 6 }}>{query.trim() ? "Try another team, league, or sport." : "Only live and upcoming events are shown. Pull down to refresh."}</Text></View>} contentContainerStyle={{ paddingBottom: 28 }} /></ScreenContainer>;
 }

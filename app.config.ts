@@ -32,7 +32,7 @@ const env = {
   appSlug: "sports803tv-mobile",
   // S3 URL of the app logo - set this to the URL returned by generate_image when creating custom logo
   // Leave empty to use the default icon from assets/images/icon.png
-  logoUrl: "",
+  logoUrl: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663637447387/eTbfDYfyypcedyqq.png",
   scheme: schemeFromBundleId,
   iosBundleId: bundleId,
   androidPackage: bundleId,
@@ -41,12 +41,14 @@ const env = {
 const config: ExpoConfig = {
   name: env.appName,
   slug: env.appSlug,
+  owner: "uganda",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: env.scheme,
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
+  jsEngine: "hermes",
   ios: {
     supportsTablet: true,
     bundleIdentifier: env.iosBundleId,
@@ -56,7 +58,7 @@ const config: ExpoConfig = {
   },
   android: {
     adaptiveIcon: {
-      backgroundColor: "#E6F4FE",
+      backgroundColor: "#080C18",
       foregroundImage: "./assets/images/android-icon-foreground.png",
       backgroundImage: "./assets/images/android-icon-background.png",
       monochromeImage: "./assets/images/android-icon-monochrome.png",
@@ -86,6 +88,9 @@ const config: ExpoConfig = {
   },
   plugins: [
     "expo-router",
+    "expo-asset",
+    "expo-notifications",
+    ["react-native-google-mobile-ads", { "androidAppId": "ca-app-pub-5622139873916803~1201837341", "iosAppId": "ca-app-pub-5622139873916803~1201837341", "userTrackingUsageDescription": "Sports803TV uses device signals to provide relevant advertising." }],
     [
       "expo-audio",
       {
@@ -105,9 +110,9 @@ const config: ExpoConfig = {
         image: "./assets/images/splash-icon.png",
         imageWidth: 200,
         resizeMode: "contain",
-        backgroundColor: "#ffffff",
+        backgroundColor: "#080C18",
         dark: {
-          backgroundColor: "#000000",
+          backgroundColor: "#080C18",
         },
       },
     ],
@@ -115,7 +120,7 @@ const config: ExpoConfig = {
       "expo-build-properties",
       {
         android: {
-          buildArchs: ["armeabi-v7a", "arm64-v8a"],
+          buildArchs: ["arm64-v8a"],
           minSdkVersion: 24,
         },
       },
@@ -124,6 +129,11 @@ const config: ExpoConfig = {
   experiments: {
     typedRoutes: true,
     reactCompiler: true,
+  },
+  extra: {
+    eas: {
+      projectId: "4b81361d-7506-414c-9678-f0384fe2d69d",
+    },
   },
 };
 
