@@ -127,3 +127,6 @@
 - [x] Build the requested professional Home layout with header actions, category filtering, hero carousel, Live Now rail, date-based fixtures, and Blogger news grid
 - [x] Validate the owner dashboard and mobile app work together, then synchronize the public GitHub repository and GitHub Pages deployment
 - [ ] Restore the managed Sports803TV project to checkpoint 0f6db515 while leaving GitHub synchronization unchanged
+- [x] Add the first live promotion and curated article through the protected owner dashboard configuration
+- [x] Select current Firebase event and Live TV channel IDs for featured placement
+- [x] Confirm the public owner configuration reaches the mobile app and provide physical Android onboarding/notification test steps
