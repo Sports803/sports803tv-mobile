@@ -106,3 +106,10 @@
 - [x] Restore reference-matching Firebase Live TV iframe playback details and donation/support controls without altering valid existing data paths
 - [x] Add regression coverage for restored Live TV iframe and donation interactions, then save a checkpoint without publishing
 - [x] Configure Patreon as the primary support action and Buy Me a Coffee as the secondary support action across Live TV, channel playback, and More
+- [x] Define and implement a secure owner-control architecture compatible with a GitHub Pages administration interface
+- [x] Add full-screen control for iframe-based and direct-media player paths while retaining provider controls
+- [ ] Add channel discovery, featured/priority content controls, reliability status, and owner-configurable promotion and ad placements
+- [ ] Add requested engagement and retention features: continue watching, calendar export, notifications, sharing, news/highlights, and match interaction surfaces
+- [x] Validate owner controls, full-screen playback, content configuration, and static administration build before checkpointing
+- [ ] Implement the selected live GitHub Pages owner dashboard backed by role-protected Sports803TV administration endpoints
+- [x] Protect owner configuration for Firebase content, featured rails, advertising, donation links, status messaging, and notifications from public modification

@@ -9,6 +9,17 @@ function getQueryParam(req: Request, key: string): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
+function ownerDashboardReturnTarget(value: string | undefined): string | null {
+  if (!value || !process.env.ADMIN_DASHBOARD_URL) return null;
+  try {
+    const configured = new URL(process.env.ADMIN_DASHBOARD_URL);
+    const requested = new URL(value);
+    return requested.origin === configured.origin ? requested.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 async function syncUser(userInfo: {
   openId?: string | null;
   name?: string | null;
@@ -48,6 +59,7 @@ function buildUserResponse(
         name?: string | null;
         email?: string | null;
         loginMethod?: string | null;
+        role?: "user" | "admin";
         lastSignedIn?: Date | null;
       },
 ) {
@@ -57,6 +69,7 @@ function buildUserResponse(
     name: user?.name ?? null,
     email: user?.email ?? null,
     loginMethod: user?.loginMethod ?? null,
+    role: user?.role ?? "user",
     lastSignedIn: (user?.lastSignedIn ?? new Date()).toISOString(),
   };
 }
@@ -65,6 +78,7 @@ export function registerOAuthRoutes(app: Express) {
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
+    const returnTo = ownerDashboardReturnTarget(getQueryParam(req, "returnTo"));
 
     if (!code || !state) {
       res.status(400).json({ error: "code and state are required" });
@@ -89,7 +103,7 @@ export function registerOAuthRoutes(app: Express) {
         process.env.EXPO_WEB_PREVIEW_URL ||
         process.env.EXPO_PACKAGER_PROXY_URL ||
         "http://localhost:8081";
-      res.redirect(302, frontendUrl);
+      res.redirect(302, returnTo ?? frontendUrl);
     } catch (error) {
       console.error("[OAuth] Callback failed", error);
       res.status(500).json({ error: "OAuth callback failed" });

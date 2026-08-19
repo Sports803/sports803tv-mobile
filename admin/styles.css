@@ -1,0 +1,13 @@
+:root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; background: #080d1b; color: #f4f6fb; }
+body { margin: 0; min-height: 100vh; display: grid; place-items: center; }
+main { width: min(760px, calc(100% - 32px)); padding: 48px 0 72px; }
+.eyebrow { color: #f33755; font-size: .75rem; font-weight: 800; letter-spacing: .13em; margin: 0; }
+h1 { font-size: clamp(2rem, 6vw, 3.5rem); margin: .35rem 0; }
+.lede, #status { color: #9eacc5; line-height: 1.55; }
+.actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin: 28px 0; }
+button { border: 0; border-radius: 12px; cursor: pointer; font: inherit; font-weight: 800; padding: 12px 16px; background: #f33755; color: #fff; }
+button.secondary { background: #17223a; color: #d6deed; }
+#editor, #audit { display: grid; gap: 10px; background: #101a30; border: 1px solid #263553; border-radius: 18px; padding: 22px; margin-top: 22px; }
+select, textarea { border: 1px solid #344568; border-radius: 10px; background: #080d1b; color: #f4f6fb; font: 14px ui-monospace, SFMono-Regular, Menlo, monospace; padding: 12px; }
+textarea { resize: vertical; }
+#audit-list { margin: 0; padding-left: 20px; color: #c8d2e3; }

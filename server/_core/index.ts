@@ -7,6 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
+import { registerOwnerControlRoutes } from "../owner-control";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -30,12 +31,21 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+  const allowedOrigins = new Set(
+    [process.env.EXPO_WEB_PREVIEW_URL, process.env.ADMIN_DASHBOARD_URL]
+      .filter((value): value is string => Boolean(value))
+      .map((value) => {
+        try { return new URL(value).origin; } catch { return ""; }
+      })
+      .filter(Boolean),
+  );
 
-  // Enable CORS for all routes - reflect the request origin to support credentials
+  // Only known app and owner-dashboard origins may use credentialed cross-origin API calls.
   app.use((req, res, next) => {
     const origin = req.headers.origin;
-    if (origin) {
+    if (origin && allowedOrigins.has(origin)) {
       res.header("Access-Control-Allow-Origin", origin);
+      res.header("Vary", "Origin");
     }
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.header(
@@ -57,6 +67,7 @@ async function startServer() {
 
   registerStorageProxy(app);
   registerOAuthRoutes(app);
+  registerOwnerControlRoutes(app);
 
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, timestamp: Date.now() });

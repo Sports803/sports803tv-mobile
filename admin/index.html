@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sports803TV Owner Console</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">SPORTS 803</p>
+      <h1>Owner console</h1>
+      <p class="lede">Manage safe public configuration. Credentials and provider tokens never belong in this dashboard.</p>
+      <section class="actions">
+        <button id="login">Sign in as owner</button>
+        <button id="refresh" class="secondary">Refresh</button>
+        <span id="status" aria-live="polite">Checking session…</span>
+      </section>
+      <section id="editor" hidden>
+        <label for="key">Configuration area</label>
+        <select id="key"></select>
+        <label for="value">JSON value</label>
+        <textarea id="value" rows="16" spellcheck="false"></textarea>
+        <button id="save">Save owner change</button>
+      </section>
+      <section id="audit" hidden>
+        <h2>Recent owner changes</h2>
+        <ul id="audit-list"></ul>
+      </section>
+    </main>
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

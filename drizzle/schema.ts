@@ -25,4 +25,27 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Remote configuration that controls safe, public-facing Sports803TV presentation.
+ * Values are JSON strings so the dashboard can evolve controls without schema churn.
+ * Private credentials are deliberately excluded from this model.
+ */
+export const ownerControlConfig = mysqlTable("ownerControlConfig", {
+  key: varchar("key", { length: 80 }).primaryKey(),
+  value: text("value").notNull(),
+  scope: mysqlEnum("scope", ["public", "private"]).default("public").notNull(),
+  updatedByOpenId: varchar("updatedByOpenId", { length: 64 }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+/** Minimal audit trail for privileged configuration changes; it never stores secret values. */
+export const ownerControlAudit = mysqlTable("ownerControlAudit", {
+  id: int("id").autoincrement().primaryKey(),
+  action: varchar("action", { length: 64 }).notNull(),
+  configKey: varchar("configKey", { length: 80 }).notNull(),
+  actorOpenId: varchar("actorOpenId", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type OwnerControlConfig = typeof ownerControlConfig.$inferSelect;
+export type InsertOwnerControlConfig = typeof ownerControlConfig.$inferInsert;

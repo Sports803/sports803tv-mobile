@@ -1,7 +1,31 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import {
+  InsertUser,
+  ownerControlAudit,
+  ownerControlConfig,
+  users,
+} from "../drizzle/schema";
 import { ENV } from "./_core/env";
+
+export const OWNER_CONTROL_KEYS = [
+  "homeLayout",
+  "featuredEvents",
+  "featuredChannels",
+  "channelOverrides",
+  "promotionBanner",
+  "adPlacements",
+  "supportLinks",
+  "reliabilityOverrides",
+  "notificationCampaign",
+  "announcement",
+] as const;
+
+export type OwnerControlKey = (typeof OWNER_CONTROL_KEYS)[number];
+
+export function isOwnerControlKey(value: string): value is OwnerControlKey {
+  return (OWNER_CONTROL_KEYS as readonly string[]).includes(value);
+}
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -89,4 +113,65 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+function parseControlValue(value: string): unknown {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+export async function listOwnerControlConfig(scope: "public" | "private" = "public") {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db
+    .select()
+    .from(ownerControlConfig)
+    .where(eq(ownerControlConfig.scope, scope))
+    .orderBy(ownerControlConfig.key);
+  return rows.map((row) => ({
+    key: row.key as OwnerControlKey,
+    value: parseControlValue(row.value),
+    updatedAt: row.updatedAt,
+  }));
+}
+
+export async function upsertOwnerControlConfig(input: {
+  key: OwnerControlKey;
+  value: unknown;
+  actorOpenId: string;
+  scope?: "public" | "private";
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Owner controls require the configured database");
+
+  const serialized = JSON.stringify(input.value);
+  await db
+    .insert(ownerControlConfig)
+    .values({
+      key: input.key,
+      value: serialized,
+      scope: input.scope ?? "public",
+      updatedByOpenId: input.actorOpenId,
+    })
+    .onDuplicateKeyUpdate({
+      set: {
+        value: serialized,
+        scope: input.scope ?? "public",
+        updatedByOpenId: input.actorOpenId,
+        updatedAt: new Date(),
+      },
+    });
+
+  await db.insert(ownerControlAudit).values({
+    action: "upsert",
+    configKey: input.key,
+    actorOpenId: input.actorOpenId,
+  });
+}
+
+export async function listOwnerControlAudit(limit = 30) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(ownerControlAudit).orderBy(desc(ownerControlAudit.createdAt)).limit(limit);
+}
