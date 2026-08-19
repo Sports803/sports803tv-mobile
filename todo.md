@@ -134,3 +134,6 @@
 - [x] Remove the persistent loading-screen startup gate reported after the preview recovery checkpoint
 - [x] Add a short automatic Continue without onboarding fallback that never blocks app access
 - [x] Diagnose and repair the missing GitHub Pages owner banner in the mobile preview configuration path
+- [x] Adapt the supplied Sports803 Blogger XML theme as a responsive companion to the mobile app
+- [x] Add configurable APK installation prompts and download links throughout the Blogger theme without hard-coding an unavailable APK URL
+- [x] Improve the Blogger theme’s mobile, tablet, and desktop widget layout while preserving template compatibility

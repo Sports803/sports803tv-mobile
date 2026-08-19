@@ -1,0 +1,80 @@
+9024:                           <b:widget-setting name='showSnippet'>false</b:widget-setting>
+9025:                           <b:widget-setting name='showPostTitle'>true</b:widget-setting>
+9026:                           <b:widget-setting name='postId'>0</b:widget-setting>
+9027:                           <b:widget-setting name='showFirstImage'>true</b:widget-setting>
+9028:                           <b:widget-setting name='useMostRecentPost'>true</b:widget-setting>
+9164:       <b:section ads='true' class='main' id='page_body' name='Page Body' showaddelement='false'>
+9165:         <b:widget id='Blog1' locked='true' title='Blog Posts' type='Blog' version='2' visible='true'>
+9166:           <b:widget-settings>
+9167:             <b:widget-setting name='showDateHeader'>false</b:widget-setting>
+9168:             <b:widget-setting name='commentLabel'>Comments</b:widget-setting>
+9169:             <b:widget-setting name='style.textcolor'>#ffffff</b:widget-setting>
+9170:             <b:widget-setting name='showShareButtons'>true</b:widget-setting>
+9171:             <b:widget-setting name='authorLabel'>De</b:widget-setting>
+9172:             <b:widget-setting name='showCommentLink'>true</b:widget-setting>
+9173:             <b:widget-setting name='style.urlcolor'>#ffffff</b:widget-setting>
+9174:             <b:widget-setting name='showAuthor'>true</b:widget-setting>
+9175:             <b:widget-setting name='style.linkcolor'>#ffffff</b:widget-setting>
+9176:             <b:widget-setting name='style.unittype'>TextAndImage</b:widget-setting>
+9177:             <b:widget-setting name='style.bgcolor'>#ffffff</b:widget-setting>
+9178:             <b:widget-setting name='timestampLabel'/>
+9179:             <b:widget-setting name='reactionsLabel'/>
+9180:             <b:widget-setting name='showAuthorProfile'>true</b:widget-setting>
+9181:             <b:widget-setting name='style.layout'>300x250</b:widget-setting>
+9182:             <b:widget-setting name='showLabels'>true</b:widget-setting>
+9183:             <b:widget-setting name='showLocation'>false</b:widget-setting>
+9184:             <b:widget-setting name='postLabelsLabel'>tags</b:widget-setting>
+9185:             <b:widget-setting name='showTimestamp'>true</b:widget-setting>
+9186:             <b:widget-setting name='postsPerAd'>3</b:widget-setting>
+9187:             <b:widget-setting name='showBacklinks'>false</b:widget-setting>
+9188:             <b:widget-setting name='style.bordercolor'>#ffffff</b:widget-setting>
+9189:             <b:widget-setting name='showInlineAds'>true</b:widget-setting>
+9190:             <b:widget-setting name='showReactions'>false</b:widget-setting>
+10630:       <b:section cond='data:view.isLayoutMode or (data:view.isPost and (data:widgets.HTML any w =&gt; w.sectionId == &quot;temabanua-main-before-ad&quot;))' id='temabanua-main-before-ad' maxwidgets='1' name='Main Ads Post (Before)' showaddelement='yes'>
+10631:         <b:widget id='HTML53' locked='true' title='' type='HTML' visible='true'>
+10632:           <b:widget-settings>
+10633:             <b:widget-setting name='content'><![CDATA[<script async="async" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5622139873916803" crossorigin="anonymous"></script>
+10829:       <b:section cond='data:view.isLayoutMode or (data:view.isPost and (data:widgets.HTML any w =&gt; w.sectionId == &quot;temabanua-main-after-ad&quot;))' id='temabanua-main-after-ad' maxwidgets='1' name='Main Ads Post (After)' showaddelement='yes'>
+10830:         <b:widget id='HTML54' locked='true' title='DONATE TO US' type='HTML' visible='true'>
+10831:           <b:widget-settings>
+10832:             <b:widget-setting name='content'><![CDATA[<style>
+11012:       <b:section cond='data:view.isSingleItem' id='temabanua-populart-posts' name='Populart Posts' showaddelement='no'>
+11013:         <b:widget id='PopularPosts1' locked='true' title='Popular TV Channels' type='PopularPosts' version='2' visible='true'>
+11014:           <b:widget-settings>
+11015:             <b:widget-setting name='numItemsToShow'>10</b:widget-setting>
+11016:             <b:widget-setting name='showThumbnails'>true</b:widget-setting>
+11017:             <b:widget-setting name='showSnippets'>false</b:widget-setting>
+11018:             <b:widget-setting name='timeRange'>LAST_WEEK</b:widget-setting>
+11104:            <b:section class='main-story owl-carousel owl-theme' id='page_story' name='Story image widget' showaddelement='true'>
+11105:              <b:widget id='Image0001' locked='false' title='UFC 306: O’Malley vs. Dvalishvili (Main Card)' type='Image' version='2' visible='true'>
+11106:                <b:widget-settings>
+11107:                  <b:widget-setting name='displayUrl'>https://dmxg5wxfqgb4u.cloudfront.net/image/2024-08/RSNUFC_KA_copy.jpg</b:widget-setting>
+11108:                  <b:widget-setting name='displayHeight'>1600</b:widget-setting>
+11109:                  <b:widget-setting name='sectionWidth'>494</b:widget-setting>
+11110:                  <b:widget-setting name='shrinkToFit'>false</b:widget-setting>
+11111:                  <b:widget-setting name='displayWidth'>1108</b:widget-setting>
+11112:                  <b:widget-setting name='link'>https://www.sports803.xyz/2024/09/ufc-306-omalley-vs-dvalishvili-main-card.html</b:widget-setting>
+11113:                  <b:widget-setting name='caption'>10074 views</b:widget-setting>
+11122:              <b:widget id='Image0002' locked='false' title='Nascar' type='Image' version='2' visible='true'>
+11123:                <b:widget-settings>
+11124:                  <b:widget-setting name='displayUrl'>https://s.yimg.com/ny/api/res/1.2/75agScaxW3INbdaW63C3eQ--/YXBwaWQ9aGlnaGxhbmRlcjt3PTY0MDtoPTQyNztjZj13ZWJw/https://media.zenfs.com/en/cp_sports_913/cfc28043486ed38fbae4de8672f6cca5</b:widget-setting>
+11125:                  <b:widget-setting name='displayHeight'>427</b:widget-setting>
+11126:                  <b:widget-setting name='sectionWidth'>607</b:widget-setting>
+11127:                  <b:widget-setting name='shrinkToFit'>false</b:widget-setting>
+11128:                  <b:widget-setting name='displayWidth'>640</b:widget-setting>
+11129:                  <b:widget-setting name='link'>https://soulmap1.blogspot.com/p/media-player.html?mora=https://2-fss-1.themediacdn.com/lv_broadcastviewer2/nts/0.m3u8</b:widget-setting>
+11130:                  <b:widget-setting name='caption'>432K view</b:widget-setting>
+11142:<b:section class='widget' id='custom-gadget' showaddelement='yes'>
+11143:  <b:widget id='HTML8' locked='false' title='' type='HTML' visible='true'>
+11144:    <b:widget-settings>
+11145:      <b:widget-setting name='content'><![CDATA[<script>
+11177:  <b:widget id='HTML5' locked='false' title='' type='HTML' visible='true'>
+11178:    <b:widget-settings>
+11179:      <b:widget-setting name='content'><![CDATA[<!--Start of Tawk.to Script-->
+11197:  <b:widget id='HTML1' locked='false' title='' type='HTML' visible='true'>
+11198:    <b:widget-settings>
+11199:      <b:widget-setting name='content'><![CDATA[<script>
+11366:  <b:widget id='HTML2' locked='false' title='' type='HTML' visible='true'>
+11367:    <b:widget-settings>
+11368:      <b:widget-setting name='content'><![CDATA[<script>
+16466:</body>
