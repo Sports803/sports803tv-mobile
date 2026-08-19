@@ -43,7 +43,21 @@
     $("live-tv-ad").checked = record(record(valueFor("adPlacements")).liveTvBanner).enabled !== false;
     $("patreon-url").value = record(valueFor("supportLinks")).patreon || "";
     $("coffee-url").value = record(valueFor("supportLinks")).buyMeACoffee || "";
+    const home = record(valueFor("homeLayout"));
+    $("hero-limit").value = home.heroLimit || 3;
+    $("live-limit").value = home.liveLimit || 8;
+    $("fixture-limit").value = home.fixtureLimit || 16;
+    $("show-hero").checked = home.showHero !== false;
+    $("show-live-now").checked = home.showLiveNow !== false;
+    $("show-fixtures").checked = home.showFixtures !== false;
+    $("show-news").checked = home.showNews !== false;
+    $("home-banner-ad").checked = record(record(valueFor("adPlacements")).homeBanner).enabled !== false;
+    const news = record(valueFor("newsFeed"));
+    $("news-enabled").checked = news.enabled !== false;
+    $("news-source-url").value = news.sourceUrl || "https://sports803tv.blogspot.com/feeds/posts/default?alt=json";
+    $("news-max-items").value = news.maxItems || 8;
     renderChannelRules();
+    renderCuratedArticles();
   }
 
   function renderChannelRules() {
@@ -60,6 +74,24 @@
       const remove = document.createElement("button");
       remove.type = "button"; remove.className = "link-button"; remove.textContent = "Remove";
       remove.addEventListener("click", () => { const next = { ...rules }; delete next[id]; save("channelOverrides", next, "Channel rule removed.").catch(showError); });
+      row.append(remove); target.append(row);
+    });
+  }
+
+  function renderCuratedArticles() {
+    const news = record(valueFor("newsFeed"));
+    const target = $("curated-articles");
+    target.replaceChildren();
+    const articles = Array.isArray(news.curated) ? news.curated : [];
+    if (!articles.length) { target.textContent = "No hand-picked stories saved. The Blogger feed will still be shown."; return; }
+    articles.forEach((article, index) => {
+      const item = record(article);
+      const row = document.createElement("div");
+      row.className = "rule-row";
+      row.textContent = item.title || `Featured story ${index + 1}`;
+      const remove = document.createElement("button");
+      remove.type = "button"; remove.className = "link-button"; remove.textContent = "Remove";
+      remove.addEventListener("click", () => { const next = articles.filter((_, itemIndex) => itemIndex !== index); save("newsFeed", { ...news, curated: next }, "Featured story removed.").catch(showError); });
       row.append(remove); target.append(row);
     });
   }
@@ -91,6 +123,12 @@
   document.querySelectorAll(".clear").forEach((button) => button.addEventListener("click", () => save(button.dataset.control, {}, "Removed. The app will hide this item after its next refresh.").catch(showError)));
   $("announcement-form").addEventListener("submit", (event) => { event.preventDefault(); save("announcement", { title: $("announcement-title").value.trim(), message: $("announcement-message").value.trim(), tone: $("announcement-tone").value }, "Announcement saved.").catch(showError); });
   $("promotion-form").addEventListener("submit", (event) => { event.preventDefault(); save("promotionBanner", { title: $("promotion-title").value.trim(), message: $("promotion-message").value.trim(), href: $("promotion-link").value.trim() }, "Featured banner saved.").catch(showError); });
+  $("home-layout-form").addEventListener("submit", (event) => { event.preventDefault(); Promise.all([
+    save("homeLayout", { showHero: $("show-hero").checked, showLiveNow: $("show-live-now").checked, showFixtures: $("show-fixtures").checked, showNews: $("show-news").checked, heroLimit: Number($("hero-limit").value) || 3, liveLimit: Number($("live-limit").value) || 8, fixtureLimit: Number($("fixture-limit").value) || 16 }),
+    save("adPlacements", { ...record(valueFor("adPlacements")), homeBanner: { enabled: $("home-banner-ad").checked } }),
+  ]).then(() => setStatus("Home layout saved. Refresh the app to see the new composition.")).catch(showError); });
+  $("news-form").addEventListener("submit", (event) => { event.preventDefault(); const current = record(valueFor("newsFeed")); const title = $("curated-title").value.trim(); const href = $("curated-link").value.trim(); const curated = Array.isArray(current.curated) ? current.curated : []; const next = title && href ? [...curated, { id: `story-${Date.now()}`, title, href, summary: $("curated-summary").value.trim(), imageUrl: $("curated-image").value.trim(), category: $("curated-category").value.trim() || "Sports803TV" }] : curated; save("newsFeed", { ...current, enabled: $("news-enabled").checked, sourceUrl: $("news-source-url").value.trim(), maxItems: Number($("news-max-items").value) || 8, curated: next }, title && href ? "News settings and featured story saved." : "News settings saved.").then(() => { $("curated-title").value = ""; $("curated-link").value = ""; $("curated-summary").value = ""; $("curated-image").value = ""; $("curated-category").value = ""; }).catch(showError); });
+  $("clear-curated").addEventListener("click", () => { const current = record(valueFor("newsFeed")); save("newsFeed", { ...current, curated: [] }, "Featured stories removed.").catch(showError); });
   $("live-tv-form").addEventListener("submit", (event) => { event.preventDefault(); Promise.all([save("featuredChannels", { ids: lines($("featured-channel-ids").value) }), save("adPlacements", { ...record(valueFor("adPlacements")), liveTvBanner: { enabled: $("live-tv-ad").checked } })]).then(() => setStatus("Live TV settings saved.")).catch(showError); });
   $("channel-rule-form").addEventListener("submit", (event) => { event.preventDefault(); const id = $("channel-id").value.trim(); if (!id) return; const rules = record(valueFor("channelOverrides")); save("channelOverrides", { ...rules, [id]: { reliability: $("channel-reliability").value, priority: Number($("channel-priority").value) || 0, note: $("channel-note").value.trim(), featured: $("channel-featured").checked, hidden: $("channel-hidden").checked } }, "Channel rule saved.").then(() => event.target.reset()).catch(showError); });
   $("support-form").addEventListener("submit", (event) => { event.preventDefault(); save("supportLinks", { patreon: $("patreon-url").value.trim(), buyMeACoffee: $("coffee-url").value.trim() }, "Support links saved.").catch(showError); });

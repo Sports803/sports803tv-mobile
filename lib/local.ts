@@ -10,8 +10,13 @@ const DATA_SAVER_KEY = "sports803:data-saver";
 const PUSH_TOKEN_KEY = "sports803:push-token";
 const ANALYTICS_CONSENT_KEY = "sports803:analytics-consent";
 const PREDICTIONS_KEY = "sports803:predictions";
+const ONBOARDING_COMPLETE_KEY = "sports803:onboarding-complete";
+const FAVORITE_SPORTS_KEY = "sports803:favorite-sports";
+const NOTIFICATIONS_ENABLED_KEY = "sports803:notifications-enabled";
+const LANGUAGE_KEY = "sports803:language";
 
 export type MatchPrediction = "home" | "draw" | "away";
+export type AppLanguage = "en" | "es" | "fr" | "pt";
 
 async function readList(key: string) {
   try { return JSON.parse((await AsyncStorage.getItem(key)) || "[]") as string[]; } catch { return []; }
@@ -36,4 +41,12 @@ export async function getAnalyticsConsent() { return (await AsyncStorage.getItem
 export async function setAnalyticsConsent(granted: boolean) { await AsyncStorage.setItem(ANALYTICS_CONSENT_KEY, granted ? "granted" : "declined"); return granted; }
 export async function getPrediction(eventId: string) { return (await readPredictions())[eventId] ?? null; }
 export async function savePrediction(eventId: string, prediction: MatchPrediction) { const current = await readPredictions(); const next = { ...current, [eventId]: prediction }; await AsyncStorage.setItem(PREDICTIONS_KEY, JSON.stringify(next)); return prediction; }
-export async function clearLocalData() { await AsyncStorage.multiRemove([FAVORITES_KEY, HISTORY_KEY, TEAM_FAVORITES_KEY, LEAGUE_FAVORITES_KEY, REMINDERS_KEY, REPORTS_KEY, DATA_SAVER_KEY, PUSH_TOKEN_KEY, ANALYTICS_CONSENT_KEY, PREDICTIONS_KEY]); }
+export const getFavoriteSports = () => readList(FAVORITE_SPORTS_KEY);
+export async function toggleFavoriteSport(sport: string) { const current = await getFavoriteSports(); const next = current.includes(sport) ? current.filter((value) => value !== sport) : [sport, ...current]; await writeList(FAVORITE_SPORTS_KEY, next); return next; }
+export async function getOnboardingComplete() { return (await AsyncStorage.getItem(ONBOARDING_COMPLETE_KEY)) === "true"; }
+export async function setOnboardingComplete(completed = true) { await AsyncStorage.setItem(ONBOARDING_COMPLETE_KEY, String(completed)); return completed; }
+export async function getNotificationsEnabled() { return (await AsyncStorage.getItem(NOTIFICATIONS_ENABLED_KEY)) === "true"; }
+export async function setNotificationsEnabled(enabled: boolean) { await AsyncStorage.setItem(NOTIFICATIONS_ENABLED_KEY, String(enabled)); return enabled; }
+export async function getAppLanguage(): Promise<AppLanguage> { const value = await AsyncStorage.getItem(LANGUAGE_KEY); return value === "es" || value === "fr" || value === "pt" ? value : "en"; }
+export async function setAppLanguage(language: AppLanguage) { await AsyncStorage.setItem(LANGUAGE_KEY, language); return language; }
+export async function clearLocalData() { await AsyncStorage.multiRemove([FAVORITES_KEY, HISTORY_KEY, TEAM_FAVORITES_KEY, LEAGUE_FAVORITES_KEY, REMINDERS_KEY, REPORTS_KEY, DATA_SAVER_KEY, PUSH_TOKEN_KEY, ANALYTICS_CONSENT_KEY, PREDICTIONS_KEY, ONBOARDING_COMPLETE_KEY, FAVORITE_SPORTS_KEY, NOTIFICATIONS_ENABLED_KEY, LANGUAGE_KEY]); }

@@ -17,9 +17,9 @@ export default function LiveTvScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [ownerControls, setOwnerControls] = useState<OwnerControlMap>({});
-  const load = useCallback(async () => {
+  const load = useCallback(async (force = false) => {
     setError("");
-    try { const [nextChannels, nextControls] = await Promise.all([fetchChannels(), fetchOwnerControls(refreshing)]); setChannels(nextChannels); setOwnerControls(nextControls); }
+    try { const [nextChannels, nextControls] = await Promise.all([fetchChannels(), fetchOwnerControls(force)]); setChannels(nextChannels); setOwnerControls(nextControls); }
     catch (caught) { setError(caught instanceof Error ? caught.message : "Could not load Live TV"); }
     finally { setLoading(false); setRefreshing(false); }
   }, []);
@@ -31,7 +31,7 @@ export default function LiveTvScreen() {
       <FlatList
         data={visibleChannels}
         keyExtractor={(item) => item.id}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(); }} tintColor="#E0102A" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(true); }} tintColor="#E0102A" />}
         ListHeaderComponent={<View style={{ paddingTop: 12, paddingBottom: 16 }}>
           <Text style={{ color: "#E0102A", fontWeight: "900", letterSpacing: 1.5, fontSize: 12 }}>SPORTS 803</Text>
           <Text style={{ color: "#F7F8FC", fontSize: 28, fontWeight: "900", marginTop: 4 }}>Live TV</Text>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FlatList,
   Image,
+  Linking,
   Pressable,
   RefreshControl,
   Text,
@@ -10,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { useRouter } from "expo-router";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import { AdSlot, AD_UNITS } from "@/components/ad-slot";
 import { ScreenContainer } from "@/components/screen-container";
@@ -26,7 +28,9 @@ import { classifySport } from "@/lib/match-center";
 import { trackAnalytics } from "@/lib/analytics";
 import { OwnerBanner } from "@/components/owner-banner";
 import { fetchOwnerControls } from "@/lib/owner-config";
-import { featuredIds, type OwnerControlMap } from "@/lib/owner-control-contract";
+import { featuredIds, ownerAdEnabled, ownerHomeLayout, ownerNewsFeed, type OwnerControlMap } from "@/lib/owner-control-contract";
+import { fetchBloggerArticles } from "@/lib/blogger-feed";
+import type { BloggerArticle } from "@/lib/blogger-feed-contract";
 
 const categories = [
   "all",
@@ -209,6 +213,22 @@ function PopularMatchCard({
   );
 }
 
+function HeroMatchCard({ event, onOpen, width }: { event: SportsEvent; onOpen: () => void; width: number }) {
+  const status = statusCopy(event);
+  return <Pressable onPress={onOpen} style={({ pressed }) => ({ width, minHeight: 198, borderRadius: 22, padding: 18, marginBottom: 8, backgroundColor: "#1D1730", borderColor: status.label === "LIVE NOW" ? palette.red : "#4A365C", borderWidth: 1, opacity: pressed ? 0.84 : 1, justifyContent: "space-between" })}>
+    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}><Text style={{ color: status.color, fontSize: 11, fontWeight: "900", letterSpacing: 0.8 }}>● {status.label}</Text><Text style={{ color: palette.gold, fontWeight: "900", fontSize: 11 }}>FEATURED</Text></View>
+    <View><Text style={{ color: palette.text, fontSize: 22, fontWeight: "900" }} numberOfLines={2}>{event.homeName} <Text style={{ color: palette.muted }}>vs</Text> {event.awayName || "Live broadcast"}</Text><Text style={{ color: palette.muted, marginTop: 8, fontSize: 12 }} numberOfLines={1}>{event.competitionLabel || event.leagueName || categoryLabel(event.category)}</Text></View>
+    <View style={{ alignSelf: "flex-start", backgroundColor: palette.red, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10 }}><Text style={{ color: "#fff", fontWeight: "900", fontSize: 12 }}>{event.channels.length ? "WATCH LIVE" : "VIEW MATCH"}</Text></View>
+  </Pressable>;
+}
+
+function NewsArticleCard({ article, width }: { article: BloggerArticle; width: number }) {
+  return <Pressable onPress={() => void Linking.openURL(article.href)} style={({ pressed }) => ({ width, borderRadius: 16, overflow: "hidden", backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.border, marginBottom: 10, opacity: pressed ? 0.8 : 1 })}>
+    {article.imageUrl ? <Image source={{ uri: article.imageUrl }} style={{ width: "100%", height: width * 0.62, backgroundColor: palette.elevated }} resizeMode="cover" /> : <View style={{ height: width * 0.42, backgroundColor: "#1D1730", padding: 12, justifyContent: "flex-end" }}><Text style={{ color: palette.red, fontWeight: "900", fontSize: 11 }}>{article.category.toUpperCase()}</Text></View>}
+    <View style={{ padding: 11 }}><Text style={{ color: palette.muted, fontSize: 10, fontWeight: "900", marginBottom: 5 }}>{article.category.toUpperCase()}</Text><Text style={{ color: palette.text, fontSize: 13, lineHeight: 18, fontWeight: "800" }} numberOfLines={3}>{article.title}</Text>{article.summary ? <Text style={{ color: palette.muted, fontSize: 11, lineHeight: 16, marginTop: 7 }} numberOfLines={3}>{article.summary}</Text> : null}</View>
+  </Pressable>;
+}
+
 function Skeletons() {
   return <View>{[1, 2, 3].map((item) => <View key={item} style={{ height: 145, borderRadius: 18, backgroundColor: palette.surface, marginBottom: 12, opacity: 0.65 }} />)}</View>;
 }
@@ -247,7 +267,8 @@ export default function HomeScreen() {
   const [teamFavorites, setTeamFavorites] = useState<string[]>([]);
   const [leagueFavorites, setLeagueFavorites] = useState<string[]>([]);
   const [ownerControls, setOwnerControls] = useState<OwnerControlMap>({});
-  const load = useCallback(async () => { setError(""); try { const [nextEvents, nextControls] = await Promise.all([fetchEvents(), fetchOwnerControls(refreshing)]); setEvents(nextEvents); setOwnerControls(nextControls); } catch (e) { setError(e instanceof Error ? e.message : "Could not load events"); } finally { setLoading(false); setRefreshing(false); } }, [refreshing]);
+  const [newsArticles, setNewsArticles] = useState<BloggerArticle[]>([]);
+  const load = useCallback(async () => { setError(""); try { const [nextEvents, nextControls] = await Promise.all([fetchEvents(), fetchOwnerControls(refreshing)]); setEvents(nextEvents); setOwnerControls(nextControls); const newsConfig = ownerNewsFeed(nextControls); if (newsConfig.enabled) { try { const remote = await fetchBloggerArticles(newsConfig.sourceUrl, newsConfig.maxItems); const combined = [...newsConfig.curated, ...remote].filter((article, index, list) => list.findIndex((candidate) => candidate.href === article.href) === index); setNewsArticles(combined.slice(0, newsConfig.maxItems)); } catch { setNewsArticles(newsConfig.curated); } } else setNewsArticles([]); } catch (e) { setError(e instanceof Error ? e.message : "Could not load events"); } finally { setLoading(false); setRefreshing(false); } }, [refreshing]);
   useEffect(() => { void Promise.all([load(), getFavorites().then(setFavorites), getHistory().then(setHistory), getTeamFavorites().then(setTeamFavorites), getLeagueFavorites().then(setLeagueFavorites)]); }, [load]);
   useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(timer); }, []);
   const filtered = useMemo(() => {
@@ -275,6 +296,10 @@ export default function HomeScreen() {
     const ids = featuredIds(ownerControls, "featuredEvents");
     return ids.map((id) => filtered.find((event) => event.id === id)).filter((event): event is SportsEvent => Boolean(event));
   }, [filtered, ownerControls]);
+  const homeLayout = useMemo(() => ownerHomeLayout(ownerControls), [ownerControls]);
+  const heroMatches = useMemo(() => [...ownerFeatured, ...popular].filter((event, index, list) => list.findIndex((candidate) => candidate.id === event.id) === index).slice(0, homeLayout.heroLimit), [ownerFeatured, popular, homeLayout.heroLimit]);
+  const liveNow = useMemo(() => filtered.filter((event) => eventStatus(event, now) === "live").slice(0, homeLayout.liveLimit), [filtered, now, homeLayout.liveLimit]);
+  const fixtureEvents = useMemo(() => filtered.filter((event) => eventStatus(event, now) === "upcoming").slice(0, homeLayout.fixtureLimit), [filtered, now, homeLayout.fixtureLimit]);
   const recent = history.flatMap((id) => { const event = events.find((item) => item.id === id); return event && eventStatus(event, now) !== "ended" ? [event] : []; });
   const setFav = async (id: string) => setFavorites(await toggleFavorite(id));
   const gridGap = 10;
@@ -283,19 +308,24 @@ export default function HomeScreen() {
   const cardWidth = Math.max(142, (viewportWidth - horizontalPadding - gridGap * (columns - 1)) / columns);
   const openEvent = (event: SportsEvent) => router.push({ pathname: "/player" as any, params: { eventId: event.id } });
   const competitionNames = Array.from(new Set(events.map((event) => event.leagueName || event.competitionLabel).filter(Boolean) as string[])).slice(0, 10);
+  const heroWidth = Math.max(260, viewportWidth - 56);
+  const articleWidth = Math.max(145, (viewportWidth - 42) / 2);
+  const fixtureDate = new Intl.DateTimeFormat("en", { weekday: "long", month: "short", day: "numeric" }).format(new Date());
   const header = <View>
-    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 10, paddingBottom: 14 }}><View><Text style={{ color: palette.red, fontSize: 12, fontWeight: "900", letterSpacing: 1.5 }}>SPORTS 803</Text><Text style={{ color: palette.text, fontSize: 28, fontWeight: "900" }}>Today’s events</Text></View><Text style={{ color: palette.muted, fontSize: 22 }}>◉</Text></View>
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 10, paddingBottom: 14 }}><View><Text style={{ color: palette.red, fontSize: 12, fontWeight: "900", letterSpacing: 1.5 }}>SPORTS 803</Text><Text style={{ color: palette.text, fontSize: 28, fontWeight: "900" }}>Live sports, your way</Text></View><Pressable onPress={() => router.push("/(tabs)/more" as any)} accessibilityRole="button" accessibilityLabel="Open alert settings" style={{ backgroundColor: palette.surface, width: 42, height: 42, borderRadius: 21, borderColor: palette.border, borderWidth: 1, alignItems: "center", justifyContent: "center" }}><MaterialIcons name="notifications-none" size={20} color={palette.text} /></Pressable></View>
     <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: palette.surface, borderColor: palette.border, borderWidth: 1, borderRadius: 16, paddingHorizontal: 12, marginBottom: 12 }}><Text style={{ color: palette.muted, fontSize: 18, marginRight: 8 }}>⌕</Text><TextInput value={query} onChangeText={setQuery} onSubmitEditing={() => void trackAnalytics("search", { queryLength: query.trim().length })} placeholder="Search teams, leagues, sports" placeholderTextColor={palette.muted} returnKeyType="search" clearButtonMode="while-editing" accessibilityLabel="Search events" style={{ flex: 1, color: palette.text, paddingVertical: 12, fontSize: 14 }} />{query ? <Pressable onPress={() => setQuery("")} hitSlop={10} accessibilityLabel="Clear event search"><Text style={{ color: palette.muted, fontSize: 18 }}>×</Text></Pressable> : null}</View>
     <FlatList horizontal showsHorizontalScrollIndicator={false} data={categories} keyExtractor={(item) => item} contentContainerStyle={{ gap: 8, paddingBottom: 16 }} renderItem={({ item }) => <Pressable onPress={() => { setSelected(item); void trackAnalytics("category_filter", { category: item }); }} style={{ backgroundColor: selected === item ? palette.red : palette.surface, borderColor: selected === item ? palette.red : palette.border, borderWidth: 1, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 }}><Text style={{ color: palette.text, fontWeight: "700", fontSize: 12 }}>{item === "all" ? "All" : categoryLabel(item)}</Text></Pressable>} />
     <FlatList horizontal showsHorizontalScrollIndicator={false} data={statuses} keyExtractor={(item) => `status-${item}`} contentContainerStyle={{ gap: 8, paddingBottom: 12 }} renderItem={({ item }) => <Pressable onPress={() => setSelectedStatus(item)} style={{ backgroundColor: selectedStatus === item ? palette.elevated : "transparent", borderColor: selectedStatus === item ? palette.red : palette.border, borderWidth: 1, borderRadius: 18, paddingHorizontal: 13, paddingVertical: 8 }}><Text style={{ color: selectedStatus === item ? palette.text : palette.muted, fontWeight: "800", fontSize: 12 }}>{item === "all" ? "All statuses" : item === "live" ? "Live now" : "Upcoming"}</Text></Pressable>} />
     <OwnerBanner controls={ownerControls} />
     {competitionNames.length > 0 ? <FlatList horizontal showsHorizontalScrollIndicator={false} data={competitionNames} keyExtractor={(item) => `competition-${item}`} contentContainerStyle={{ gap: 8, paddingBottom: 12 }} renderItem={({ item }) => <Pressable onPress={() => router.push({ pathname: "/competition" as any, params: { name: item } })} style={{ backgroundColor: palette.surface, borderColor: palette.border, borderWidth: 1, borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8 }}><Text style={{ color: palette.muted, fontWeight: "800", fontSize: 11 }}>{item}</Text></Pressable>} /> : null}
-    {ownerFeatured.length > 0 ? <View style={{ marginBottom: 14 }}><Text style={{ color: palette.text, fontSize: 19, fontWeight: "900", marginBottom: 9 }}>Owner picks</Text><View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" }}>{ownerFeatured.map((event) => <PopularMatchCard key={`owner-${event.id}`} event={event} width={cardWidth} favorite={favorites.includes(event.id)} onFavorite={() => void setFav(event.id)} onOpen={() => openEvent(event)} />)}</View></View> : null}
-    {popular.length > 0 ? <View style={{ marginBottom: 14 }}><View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 9 }}><View><Text style={{ color: palette.text, fontSize: 19, fontWeight: "900" }}>Popular matches</Text><Text style={{ color: palette.muted, fontSize: 11, marginTop: 2 }}>Top events right now</Text></View><Text style={{ color: palette.red, fontSize: 12, fontWeight: "900" }}>LIVE & FEATURED</Text></View><View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" }}>{popular.map((event) => <PopularMatchCard key={`popular-${event.id}`} event={event} width={cardWidth} favorite={favorites.includes(event.id)} onFavorite={() => void setFav(event.id)} onOpen={() => openEvent(event)} />)}</View></View> : null}
+    {homeLayout.showHero && heroMatches.length > 0 ? <View style={{ marginBottom: 18 }}><View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}><Text style={{ color: palette.text, fontSize: 20, fontWeight: "900" }}>Big games</Text><Text style={{ color: palette.red, fontWeight: "900", fontSize: 11 }}>WATCH LIVE</Text></View><FlatList horizontal showsHorizontalScrollIndicator={false} data={heroMatches} keyExtractor={(item) => `hero-${item.id}`} contentContainerStyle={{ gap: 10 }} renderItem={({ item }) => <HeroMatchCard event={item} width={heroWidth} onOpen={() => openEvent(item)} />} /></View> : null}
+    {homeLayout.showLiveNow && liveNow.length > 0 ? <View style={{ marginBottom: 18 }}><View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}><View><Text style={{ color: palette.text, fontSize: 20, fontWeight: "900" }}>Live now</Text><Text style={{ color: palette.muted, fontSize: 11, marginTop: 2 }}>Scores and streams in progress</Text></View><Text style={{ color: palette.red, fontWeight: "900", fontSize: 11 }}>● LIVE</Text></View><FlatList horizontal showsHorizontalScrollIndicator={false} data={liveNow} keyExtractor={(item) => `live-${item.id}`} contentContainerStyle={{ gap: 10 }} renderItem={({ item }) => <PopularMatchCard event={item} width={Math.max(190, viewportWidth * 0.58)} favorite={favorites.includes(item.id)} onFavorite={() => void setFav(item.id)} onOpen={() => openEvent(item)} />} /></View> : null}
     {recent.length > 0 ? <View style={{ marginBottom: 18 }}><Text style={{ color: palette.text, fontSize: 16, fontWeight: "800", marginBottom: 8 }}>Recently viewed</Text><FlatList horizontal showsHorizontalScrollIndicator={false} data={recent.slice(0, 5)} keyExtractor={(item) => item.id} contentContainerStyle={{ gap: 8 }} renderItem={({ item }) => <Pressable onPress={() => openEvent(item)} style={{ backgroundColor: palette.elevated, borderRadius: 12, padding: 10, width: 160 }}><Text style={{ color: palette.text, fontWeight: "700" }} numberOfLines={2}>{item.homeName} vs {item.awayName}</Text><Text style={{ color: palette.muted, fontSize: 11, marginTop: 4 }}>{item.leagueName || "Sports803TV"}</Text></Pressable>} /></View> : null}
-    <AdSlot unitId={AD_UNITS.homeBanner} />
+    {ownerAdEnabled(ownerControls, "homeBanner") ? <AdSlot unitId={AD_UNITS.homeBanner} /> : null}
     {error ? <View style={{ backgroundColor: "#3A1520", borderRadius: 12, padding: 12, marginBottom: 14 }}><Text style={{ color: "#FFB7C1" }}>{error}</Text></View> : null}
-    <Text style={{ color: palette.text, fontSize: 19, fontWeight: "900", marginBottom: 12 }}>{query.trim() ? `${filtered.length} search result${filtered.length === 1 ? "" : "s"}` : selectedStatus !== "all" ? `${selectedStatus === "live" ? "Live now" : selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1)} · ${selected === "all" ? "All sports" : categoryLabel(selected)}` : selected === "all" ? "All sports" : categoryLabel(selected)}</Text>
+    {homeLayout.showFixtures ? <View style={{ marginTop: 2, marginBottom: 12 }}><Text style={{ color: palette.text, fontSize: 20, fontWeight: "900" }}>Today’s fixtures</Text><Text style={{ color: palette.muted, marginTop: 3, fontSize: 12 }}>{fixtureDate}</Text></View> : null}
   </View>;
-  return <ScreenContainer containerClassName="bg-background" className="px-4"><FlatList key={`events-${columns}`} data={filtered} numColumns={columns} columnWrapperStyle={{ gap: gridGap }} keyExtractor={(item) => item.id} renderItem={({ item }) => <EventCard event={item} width={cardWidth} favorite={favorites.includes(item.id)} onFavorite={() => void setFav(item.id)} onOpen={() => openEvent(item)} />} ListHeaderComponent={header} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(); }} tintColor={palette.red} />} ListEmptyComponent={loading ? <Skeletons /> : <View style={{ paddingVertical: 60, alignItems: "center" }}><Text style={{ color: palette.text, fontSize: 18, fontWeight: "800" }}>No events found</Text><Text style={{ color: palette.muted, marginTop: 6 }}>{query.trim() ? "Try another team, league, or sport." : "Only live and upcoming events are shown. Pull down to refresh."}</Text></View>} contentContainerStyle={{ paddingBottom: 28 }} /></ScreenContainer>;
+  const footer = homeLayout.showNews && newsArticles.length > 0 ? <View style={{ marginTop: 16 }}><View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}><View><Text style={{ color: palette.text, fontSize: 20, fontWeight: "900" }}>Trending news</Text><Text style={{ color: palette.muted, marginTop: 3, fontSize: 12 }}>From Sports803TV</Text></View><Pressable onPress={() => router.push("/news" as any)}><Text style={{ color: palette.red, fontWeight: "900", fontSize: 12 }}>SEE ALL</Text></Pressable></View><View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" }}>{newsArticles.map((article) => <NewsArticleCard key={article.id} article={article} width={articleWidth} />)}</View></View> : null;
+  const mainEvents = homeLayout.showFixtures ? fixtureEvents : [];
+  return <ScreenContainer containerClassName="bg-background" className="px-4"><FlatList key={`events-${columns}`} data={mainEvents} numColumns={columns} columnWrapperStyle={mainEvents.length ? { gap: gridGap } : undefined} keyExtractor={(item) => item.id} renderItem={({ item }) => <EventCard event={item} width={cardWidth} favorite={favorites.includes(item.id)} onFavorite={() => void setFav(item.id)} onOpen={() => openEvent(item)} />} ListHeaderComponent={header} ListFooterComponent={footer} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(); }} tintColor={palette.red} />} ListEmptyComponent={loading ? <Skeletons /> : homeLayout.showFixtures ? <View style={{ paddingVertical: 30, alignItems: "center" }}><Text style={{ color: palette.text, fontSize: 16, fontWeight: "800" }}>No upcoming fixtures found</Text><Text style={{ color: palette.muted, marginTop: 6, textAlign: "center" }}>{query.trim() ? "Try another team, league, or sport." : "Pull down to refresh the live fixture feed."}</Text></View> : null} contentContainerStyle={{ paddingBottom: 28 }} /></ScreenContainer>;
 }

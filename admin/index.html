@@ -48,6 +48,24 @@
             <div class="button-row"><button type="submit">Save banner</button><button class="secondary clear" data-control="promotionBanner" type="button">Remove</button></div>
           </form>
 
+          <form id="home-layout-form" class="card form-grid">
+            <div><p class="section-kicker">HOME COMPOSITION</p><h2>What viewers see</h2><p>Turn Home sections on or off and choose how many items each section can show.</p></div>
+            <div class="two-column"><label>Hero matches<input id="hero-limit" type="number" value="3" min="1" max="6" /></label><label>Live matches<input id="live-limit" type="number" value="8" min="1" max="16" /></label></div>
+            <label>Fixture list<input id="fixture-limit" type="number" value="16" min="4" max="40" /></label>
+            <div class="toggle-stack"><label class="toggle"><input id="show-hero" type="checkbox" checked /> Show top hero carousel</label><label class="toggle"><input id="show-live-now" type="checkbox" checked /> Show Live Now row</label><label class="toggle"><input id="show-fixtures" type="checkbox" checked /> Show Today’s Fixtures</label><label class="toggle"><input id="show-news" type="checkbox" checked /> Show Trending News</label><label class="toggle"><input id="home-banner-ad" type="checkbox" checked /> Show Home banner ad</label></div>
+            <button type="submit">Save Home layout</button>
+          </form>
+
+          <form id="news-form" class="card form-grid">
+            <div><p class="section-kicker">TRENDING NEWS</p><h2>Blogger &amp; featured stories</h2><p>The app reads this public feed. You can also add a small number of hand-picked article cards.</p></div>
+            <label class="toggle"><input id="news-enabled" type="checkbox" checked /> Show Trending News on Home</label>
+            <label>Blogger JSON feed URL<input id="news-source-url" type="url" value="https://sports803tv.blogspot.com/feeds/posts/default?alt=json" required /></label>
+            <label>Number of feed stories<input id="news-max-items" type="number" value="8" min="1" max="20" /></label>
+            <fieldset class="subform"><legend>Add a featured article</legend><label>Headline<input id="curated-title" maxlength="160" placeholder="Optional featured story" /></label><label>Article link<input id="curated-link" type="url" placeholder="https://" /></label><label>Short summary<input id="curated-summary" maxlength="500" placeholder="Optional description" /></label><label>Image link<input id="curated-image" type="url" placeholder="https://" /></label><label>Category<input id="curated-category" maxlength="48" placeholder="Sports803TV" /></label></fieldset>
+            <div class="button-row"><button type="submit">Save news settings</button><button id="clear-curated" class="secondary" type="button">Remove featured stories</button></div>
+            <div id="curated-articles" class="saved-rules" aria-live="polite"></div>
+          </form>
+
           <form id="live-tv-form" class="card form-grid">
             <div><p class="section-kicker">LIVE TV</p><h2>Channel spotlight</h2><p>Enter channel IDs from your Firebase Live TV list, one per line.</p></div>
             <label>Featured channel IDs<textarea id="featured-channel-ids" rows="5" placeholder="channel-id-1&#10;channel-id-2"></textarea></label>

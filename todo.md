@@ -119,3 +119,11 @@
 - [x] Change the Sports803TV GitHub repository visibility to public
 - [x] Add secure server-side owner-dashboard credential access using the requested username and password without exposing credentials in GitHub Pages files
 - [x] Simplify the owner dashboard into clear no-code configuration controls and deploy it through GitHub Pages
+- [x] Connect the owner dashboard and mobile application through a documented, secure live configuration contract
+- [x] Add dashboard controls for Home composition, hero content, promotion banners, ad placements, RSS news sources, and curated articles
+- [x] Add a branded splash-to-app startup path with no artificial wait beyond the requested three-second maximum
+- [x] Add optional three-step onboarding for favorite sport and team personalization
+- [x] Expand settings with favorites, notification preference, theme selection, and language selection
+- [x] Build the requested professional Home layout with header actions, category filtering, hero carousel, Live Now rail, date-based fixtures, and Blogger news grid
+- [x] Validate the owner dashboard and mobile app work together, then synchronize the public GitHub repository and GitHub Pages deployment
+- [ ] Restore the managed Sports803TV project to checkpoint 0f6db515 while leaving GitHub synchronization unchanged

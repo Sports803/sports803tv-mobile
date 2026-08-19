@@ -19,6 +19,7 @@ export const OWNER_CONTROL_KEYS = [
   "reliabilityOverrides",
   "notificationCampaign",
   "announcement",
+  "newsFeed",
 ] as const;
 
 export type OwnerControlKey = (typeof OWNER_CONTROL_KEYS)[number];

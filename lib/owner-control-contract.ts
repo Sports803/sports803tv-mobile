@@ -8,7 +8,8 @@ export type OwnerControlKey =
   | "supportLinks"
   | "reliabilityOverrides"
   | "notificationCampaign"
-  | "announcement";
+  | "announcement"
+  | "newsFeed";
 
 export type OwnerControlMap = Partial<Record<OwnerControlKey, unknown>>;
 
@@ -68,6 +69,85 @@ export function ownerChannelOverride(controls: OwnerControlMap, channelId: strin
 export function ownerAdEnabled(controls: OwnerControlMap, placement: string) {
   const placementValue = asRecord(asRecord(controls.adPlacements)[placement]);
   return placementValue.enabled !== false;
+}
+
+export type OwnerHomeLayout = {
+  showHero: boolean;
+  showLiveNow: boolean;
+  showFixtures: boolean;
+  showNews: boolean;
+  heroLimit: number;
+  liveLimit: number;
+  fixtureLimit: number;
+};
+
+function boundedInteger(value: unknown, fallback: number, min: number, max: number) {
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.min(max, Math.max(min, Math.round(value)))
+    : fallback;
+}
+
+export function ownerHomeLayout(controls: OwnerControlMap): OwnerHomeLayout {
+  const value = asRecord(controls.homeLayout);
+  return {
+    showHero: value.showHero !== false,
+    showLiveNow: value.showLiveNow !== false,
+    showFixtures: value.showFixtures !== false,
+    showNews: value.showNews !== false,
+    heroLimit: boundedInteger(value.heroLimit, 3, 1, 6),
+    liveLimit: boundedInteger(value.liveLimit, 8, 1, 16),
+    fixtureLimit: boundedInteger(value.fixtureLimit, 16, 4, 40),
+  };
+}
+
+export type CuratedArticle = {
+  id: string;
+  title: string;
+  summary: string;
+  href: string;
+  imageUrl: string;
+  category: string;
+};
+
+export type OwnerNewsFeed = {
+  enabled: boolean;
+  sourceUrl: string;
+  maxItems: number;
+  curated: CuratedArticle[];
+};
+
+function safePublicUrl(value: unknown) {
+  if (typeof value !== "string") return "";
+  try {
+    const parsed = new URL(value.trim());
+    return parsed.protocol === "https:" ? parsed.toString() : "";
+  } catch {
+    return "";
+  }
+}
+
+export function ownerNewsFeed(controls: OwnerControlMap): OwnerNewsFeed {
+  const value = asRecord(controls.newsFeed);
+  const curated = Array.isArray(value.curated) ? value.curated : [];
+  return {
+    enabled: value.enabled !== false,
+    sourceUrl: safePublicUrl(value.sourceUrl) || "https://sports803tv.blogspot.com/feeds/posts/default?alt=json",
+    maxItems: boundedInteger(value.maxItems, 8, 1, 20),
+    curated: curated.flatMap((item, index) => {
+      const source = asRecord(item);
+      const title = typeof source.title === "string" ? source.title.trim().slice(0, 160) : "";
+      const href = safePublicUrl(source.href);
+      if (!title || !href) return [];
+      return [{
+        id: typeof source.id === "string" && source.id.trim() ? source.id.trim().slice(0, 80) : `curated-${index}`,
+        title,
+        href,
+        summary: typeof source.summary === "string" ? source.summary.trim().slice(0, 500) : "",
+        imageUrl: safePublicUrl(source.imageUrl),
+        category: typeof source.category === "string" ? source.category.trim().slice(0, 48) : "Sports803TV",
+      }];
+    }).slice(0, 12),
+  };
 }
 
 export function ownerRankedChannels<T extends { id: string }>(channels: T[], controls: OwnerControlMap): T[] {

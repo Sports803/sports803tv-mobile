@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { asRecord, asStringList, featuredIds, ownerAdEnabled, ownerAnnouncement, ownerChannelOverride, ownerPromotion, ownerRankedChannels } from "../lib/owner-control-contract";
+import { asRecord, asStringList, featuredIds, ownerAdEnabled, ownerAnnouncement, ownerChannelOverride, ownerHomeLayout, ownerNewsFeed, ownerPromotion, ownerRankedChannels } from "../lib/owner-control-contract";
 
 describe("owner control client contract", () => {
   it("only accepts safe public value shapes for presentation controls", () => {
@@ -29,5 +29,21 @@ describe("owner control client contract", () => {
     expect(ownerChannelOverride(controls, "channel-b")).toMatchObject({ featured: true, reliability: "issues", note: "Provider is restarting" });
     expect(ownerAdEnabled(controls, "liveTvBanner")).toBe(false);
     expect(ownerAdEnabled(controls, "homeBanner")).toBe(true);
+  });
+
+  it("normalizes bounded Home layout and safe owner editorial configuration", () => {
+    const controls = {
+      homeLayout: { showHero: false, heroLimit: 100, liveLimit: 0, fixtureLimit: 18 },
+      newsFeed: {
+        sourceUrl: "https://sports803tv.blogspot.com/feeds/posts/default?alt=json",
+        maxItems: 50,
+        curated: [
+          { title: "Top fixture", href: "https://sports803tv.blogspot.com/p/top-fixture.html", imageUrl: "javascript:bad" },
+          { title: "Blocked", href: "http://example.test" },
+        ],
+      },
+    };
+    expect(ownerHomeLayout(controls)).toMatchObject({ showHero: false, heroLimit: 6, liveLimit: 1, fixtureLimit: 18 });
+    expect(ownerNewsFeed(controls)).toMatchObject({ maxItems: 20, curated: [{ title: "Top fixture", imageUrl: "" }] });
   });
 });
