@@ -2,7 +2,7 @@ import * as Linking from "expo-linking";
 import { Share } from "react-native";
 
 import type { SportsEvent } from "@/lib/sports";
-import { eventSharePath } from "@/lib/share-contract";
+import { eventSharePath, inviteShareMessage } from "@/lib/share-contract";
 
 export { eventSharePath } from "@/lib/share-contract";
 
@@ -14,6 +14,12 @@ export function buildEventShareMessage(event: Pick<SportsEvent, "id" | "homeName
 
 export function buildEventShareUrl(eventId: string) {
   return Linking.createURL(eventSharePath(eventId));
+}
+
+export const buildInviteShareMessage = inviteShareMessage;
+
+export async function shareSports803() {
+  return Share.share({ message: `${buildInviteShareMessage()}\n${Linking.createURL("/")}`, title: "Invite friends to Sports803TV" });
 }
 
 export async function shareEvent(event: SportsEvent) {

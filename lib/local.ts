@@ -9,11 +9,15 @@ const REPORTS_KEY = "sports803:stream-reports";
 const DATA_SAVER_KEY = "sports803:data-saver";
 const PUSH_TOKEN_KEY = "sports803:push-token";
 const ANALYTICS_CONSENT_KEY = "sports803:analytics-consent";
+const PREDICTIONS_KEY = "sports803:predictions";
+
+export type MatchPrediction = "home" | "draw" | "away";
 
 async function readList(key: string) {
   try { return JSON.parse((await AsyncStorage.getItem(key)) || "[]") as string[]; } catch { return []; }
 }
 async function writeList(key: string, values: string[]) { await AsyncStorage.setItem(key, JSON.stringify(values.slice(0, 50))); }
+async function readPredictions() { try { const value = JSON.parse((await AsyncStorage.getItem(PREDICTIONS_KEY)) || "{}"); return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, MatchPrediction> : {}; } catch { return {}; } }
 export const getFavorites = () => readList(FAVORITES_KEY);
 export const getHistory = () => readList(HISTORY_KEY);
 export const getTeamFavorites = () => readList(TEAM_FAVORITES_KEY);
@@ -30,4 +34,6 @@ export async function savePushToken(token: string) { await AsyncStorage.setItem(
 export async function saveStreamReport(eventId: string, reason: string) { const current = await readList(REPORTS_KEY); const next = [`${eventId}:${reason}:${Date.now()}`, ...current]; await writeList(REPORTS_KEY, next); return next; }
 export async function getAnalyticsConsent() { return (await AsyncStorage.getItem(ANALYTICS_CONSENT_KEY)) === "granted"; }
 export async function setAnalyticsConsent(granted: boolean) { await AsyncStorage.setItem(ANALYTICS_CONSENT_KEY, granted ? "granted" : "declined"); return granted; }
-export async function clearLocalData() { await AsyncStorage.multiRemove([FAVORITES_KEY, HISTORY_KEY, TEAM_FAVORITES_KEY, LEAGUE_FAVORITES_KEY, REMINDERS_KEY, REPORTS_KEY, DATA_SAVER_KEY, PUSH_TOKEN_KEY, ANALYTICS_CONSENT_KEY]); }
+export async function getPrediction(eventId: string) { return (await readPredictions())[eventId] ?? null; }
+export async function savePrediction(eventId: string, prediction: MatchPrediction) { const current = await readPredictions(); const next = { ...current, [eventId]: prediction }; await AsyncStorage.setItem(PREDICTIONS_KEY, JSON.stringify(next)); return prediction; }
+export async function clearLocalData() { await AsyncStorage.multiRemove([FAVORITES_KEY, HISTORY_KEY, TEAM_FAVORITES_KEY, LEAGUE_FAVORITES_KEY, REMINDERS_KEY, REPORTS_KEY, DATA_SAVER_KEY, PUSH_TOKEN_KEY, ANALYTICS_CONSENT_KEY, PREDICTIONS_KEY]); }

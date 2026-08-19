@@ -18,7 +18,7 @@
 - [x] Update Sports803/Event with Live TV add/edit controls and Firebase `livetv/channels` writes
 - [x] Add deterministic tests for Firebase normalization, filtering, favorites, history, and ad configuration
 - [x] Validate TypeScript, lint, tests, and native/web rendering
-- [ ] Save final checkpoint and provide APK build instructions through the project UI
+- [x] Save final checkpoint and provide APK build instructions through the project UI
 - [x] Diagnose unavailable Expo preview
 - [x] Diagnose Android APK build failure
 - [x] Apply and validate preview/build compatibility fixes
@@ -108,8 +108,9 @@
 - [x] Configure Patreon as the primary support action and Buy Me a Coffee as the secondary support action across Live TV, channel playback, and More
 - [x] Define and implement a secure owner-control architecture compatible with a GitHub Pages administration interface
 - [x] Add full-screen control for iframe-based and direct-media player paths while retaining provider controls
-- [ ] Add channel discovery, featured/priority content controls, reliability status, and owner-configurable promotion and ad placements
-- [ ] Add requested engagement and retention features: continue watching, calendar export, notifications, sharing, news/highlights, and match interaction surfaces
+- [x] Add channel discovery, featured/priority content controls, reliability status, and owner-configurable promotion and ad placements
+- [x] Add requested engagement and retention features: continue watching, calendar export, notifications, sharing, news/highlights, and match interaction surfaces
 - [x] Validate owner controls, full-screen playback, content configuration, and static administration build before checkpointing
-- [ ] Implement the selected live GitHub Pages owner dashboard backed by role-protected Sports803TV administration endpoints
+- [x] Implement the selected live GitHub Pages owner dashboard backed by role-protected Sports803TV administration endpoints
 - [x] Protect owner configuration for Firebase content, featured rails, advertising, donation links, status messaging, and notifications from public modification
+- [x] Add permission-aware native match calendar export, on-device match prediction choices, and invitation sharing without adding unconsented tracking

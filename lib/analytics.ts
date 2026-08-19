@@ -11,7 +11,9 @@ export type SportsAnalyticsEvent =
   | "share_event"
   | "match_center_open"
   | "support_tap"
-  | "ad_impression";
+  | "ad_impression"
+  | "prediction_set"
+  | "app_invite_share";
 
 /**
  * Consent-gated analytics boundary. A native Firebase Analytics adapter may be

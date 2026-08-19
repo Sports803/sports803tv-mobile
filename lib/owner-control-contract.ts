@@ -42,3 +42,38 @@ export function ownerPromotion(controls: OwnerControlMap) {
   const href = typeof value.href === "string" ? value.href.trim() : "";
   return title || message ? { title: title || "Featured on Sports803TV", message, href } : null;
 }
+
+export type ChannelReliability = "reliable" | "issues" | "offline";
+
+export type ChannelOwnerOverride = {
+  hidden: boolean;
+  featured: boolean;
+  priority: number;
+  reliability: ChannelReliability;
+  note: string;
+};
+
+export function ownerChannelOverride(controls: OwnerControlMap, channelId: string): ChannelOwnerOverride {
+  const source = asRecord(asRecord(controls.channelOverrides)[channelId]);
+  const reliability = source.reliability === "issues" || source.reliability === "offline" ? source.reliability : "reliable";
+  return {
+    hidden: source.hidden === true,
+    featured: source.featured === true || featuredIds(controls, "featuredChannels").includes(channelId),
+    priority: typeof source.priority === "number" && Number.isFinite(source.priority) ? source.priority : 0,
+    reliability,
+    note: typeof source.note === "string" ? source.note.trim().slice(0, 180) : "",
+  };
+}
+
+export function ownerAdEnabled(controls: OwnerControlMap, placement: string) {
+  const placementValue = asRecord(asRecord(controls.adPlacements)[placement]);
+  return placementValue.enabled !== false;
+}
+
+export function ownerRankedChannels<T extends { id: string }>(channels: T[], controls: OwnerControlMap): T[] {
+  return channels
+    .map((channel, index) => ({ channel, index, control: ownerChannelOverride(controls, channel.id) }))
+    .filter(({ control }) => !control.hidden)
+    .sort((left, right) => Number(right.control.featured) - Number(left.control.featured) || right.control.priority - left.control.priority || left.index - right.index)
+    .map(({ channel }) => channel);
+}

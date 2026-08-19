@@ -7,6 +7,7 @@ import { SupportActions } from "@/components/support-actions";
 import { trackAnalytics } from "@/lib/analytics";
 import { clearLocalData, getAnalyticsConsent, getDataSaver, getLeagueFavorites, getTeamFavorites, setAnalyticsConsent, setDataSaver, toggleLeagueFavorite, toggleTeamFavorite } from "@/lib/local";
 import { requestNotificationPermission } from "@/lib/notifications";
+import { shareSports803 } from "@/lib/sharing";
 import { fetchEvents, type SportsEvent } from "@/lib/sports";
 
 const card = { backgroundColor: "#11182A", borderColor: "#26314A", borderWidth: 1, borderRadius: 18, padding: 16, marginTop: 12 } as const;
@@ -43,6 +44,8 @@ export default function MoreScreen() {
           <View style={card}><Text style={{ color: "#F7F8FC", fontSize: 17, fontWeight: "800" }}>Privacy & analytics</Text><Text style={{ color: "#9AA6BE", marginTop: 8, lineHeight: 19 }}>Optional analytics help improve searches, player reliability, and feature discovery. No event is recorded until you opt in.</Text><Pressable onPress={() => void setConsent(!analyticsConsent)} style={{ marginTop: 14 }}><Text style={{ color: analyticsConsent ? "#36D399" : "#9AA6BE", fontWeight: "900" }}>{analyticsConsent ? "✓ Analytics enabled" : "Enable anonymous analytics"}</Text></Pressable><Text style={{ color: "#66718A", fontSize: 11, marginTop: 8 }}>Firebase Analytics requires native Firebase configuration before production events can be delivered.</Text></View>
 
           <View style={card}><SupportActions /></View>
+
+          <View style={card}><Text style={{ color: "#F7F8FC", fontSize: 17, fontWeight: "800" }}>Invite friends</Text><Text style={{ color: "#9AA6BE", marginTop: 6, lineHeight: 19 }}>Share Sports803TV so your friends can follow live matches and watch together.</Text><Pressable onPress={() => { void shareSports803(); void trackAnalytics("app_invite_share", { surface: "more" }); }} style={{ marginTop: 14 }}><Text style={{ color: "#36D399", fontWeight: "900" }}>Share Sports803TV</Text></Pressable></View>
 
           <View style={card}><Text style={{ color: "#F7F8FC", fontSize: 17, fontWeight: "800" }}>Favorite teams</Text><Text style={{ color: "#9AA6BE", marginTop: 6 }}>Your Home screen can prioritize these teams.</Text><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 }}>{teamOptions.map((name) => <Pressable key={name} onPress={async () => setTeams(await toggleTeamFavorite(name))} style={{ backgroundColor: teams.includes(name) ? "#E0102A" : "#17213A", borderRadius: 16, paddingHorizontal: 10, paddingVertical: 8 }}><Text style={{ color: "#F7F8FC", fontSize: 11, fontWeight: "800" }}>{teams.includes(name) ? "★ " : "☆ "}{name}</Text></Pressable>)}</View></View>
 

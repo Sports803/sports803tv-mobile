@@ -90,6 +90,7 @@ const config: ExpoConfig = {
     "expo-router",
     "expo-asset",
     "expo-notifications",
+    ["expo-calendar", { "calendarPermission": "Allow Sports803TV to add match reminders to your calendar." }],
     ["react-native-google-mobile-ads", { "androidAppId": "ca-app-pub-5622139873916803~1201837341", "iosAppId": "ca-app-pub-5622139873916803~1201837341", "userTrackingUsageDescription": "Sports803TV uses device signals to provide relevant advertising." }],
     [
       "expo-audio",
