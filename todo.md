@@ -102,3 +102,7 @@
 - [x] Assess ESPN classification and optional Sportmonks, Blogger, ImgBB, and scheduled synchronization requirements with secure configuration boundaries
 - [x] Add and run expanded contract tests for ESPN classification, Sportmonks fallback, Match Center, iframe URLs, sharing, analytics consent, AdMob safeguards, and responsive routes
 - [x] Save a post-remediation checkpoint and provide updated APK guidance without publishing automatically
+- [x] Compare the supplied reference preview with the current Firebase Live TV iframe and donation/support behavior
+- [x] Restore reference-matching Firebase Live TV iframe playback details and donation/support controls without altering valid existing data paths
+- [x] Add regression coverage for restored Live TV iframe and donation interactions, then save a checkpoint without publishing
+- [x] Configure Patreon as the primary support action and Buy Me a Coffee as the secondary support action across Live TV, channel playback, and More

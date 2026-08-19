@@ -28,6 +28,7 @@ export type LiveChannel = { id: string; name: string; logo?: string; src: string
 
 const text = (value: unknown, fallback = "") => typeof value === "string" ? value : value == null ? fallback : String(value);
 const streamUrl = (s: StreamSource) => text(s.src || s.iframe || s.iframeUrl || s.playerUrl || s.url || s.streamUrl);
+export const isDirectMediaUrl = (url: string) => /\.(m3u8|mpd|mp4|webm|mov)(?:$|[?#])/i.test(url) || /^(rtmp|rtsp):\/\//i.test(url);
 
 export function normalizeEvent(key: string, raw: any): SportsEvent | null {
   if (!raw || typeof raw !== "object") return null;
@@ -53,10 +54,14 @@ export function normalizeEvent(key: string, raw: any): SportsEvent | null {
 
 export function normalizeChannel(key: string, raw: any): LiveChannel | null {
   if (!raw || typeof raw !== "object") return null;
-  const iframe = text(raw.iframe || raw.iframeUrl || raw.playerUrl);
-  const src = text(iframe || raw.src || raw.url || raw.streamUrl);
+  const iframe = text(raw.iframe || raw.iframeUrl || raw.playerUrl || raw.embed || raw.embedUrl || raw.embed_url);
+  const src = text(iframe || raw.src || raw.url || raw.streamUrl || raw.stream || raw.link);
   if (!/^https?:\/\//i.test(src)) return null;
-  return { id: text(raw.id, key), name: text(raw.name || raw.title, "Live channel"), logo: text(raw.logo), src, category: text(raw.category, "other"), isLive: raw.isLive !== false, sourceKind: iframe ? "embed" : "video" };
+  return {
+    id: text(raw.id, key), name: text(raw.name || raw.title, "Live channel"), logo: text(raw.logo), src,
+    category: text(raw.category, "other"), isLive: raw.isLive !== false,
+    sourceKind: iframe || !isDirectMediaUrl(src) ? "embed" : "video",
+  };
 }
 
 async function readPath(path: string, signal?: AbortSignal) {
