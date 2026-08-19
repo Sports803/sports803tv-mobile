@@ -16570,6 +16570,23 @@ window.onload = function() {
 })();
 //]]>
 </script>
+<script type='text/javascript'>
+//<![CDATA[
+(function(){
+  function relocateSportPanel(){
+    var panel=document.getElementById('s803-sport-tags');
+    var primary=document.querySelector('.temabanua-main-prima');
+    if(!panel||!primary||panel.parentNode===primary)return;
+    primary.insertBefore(panel,primary.firstChild);
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){setTimeout(relocateSportPanel,40);});
+  }else{
+    setTimeout(relocateSportPanel,40);
+  }
+})();
+//]]>
+</script>
 </body>
 
 </html>

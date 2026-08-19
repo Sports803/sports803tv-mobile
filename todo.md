@@ -143,3 +143,4 @@
 - [x] Correct the invalid Blogger HTML widget identifier reported during theme import
 - [x] Redesign the Blogger app-install and Live TV widgets for compact responsive phone, tablet, and desktop layouts
 - [x] Fix the Browse by sport mobile widget overlay so it no longer covers other content
+- [x] Restore original mobile widgets hidden by the Browse by sport insertion-point regression
