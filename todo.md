@@ -94,11 +94,11 @@
 - [x] Inspect and securely configure all required migration environment variables without exposing prior credentials
 - [x] Authenticate Expo/EAS using the new Manus-account token and determine EAS project ownership migration requirements
 - [x] Validate TypeScript, Vitest, ESLint, Expo configuration, web export, Firebase normalization, deep links, Sportmonks configuration, and Expo Go safeguards
-- [ ] Save a passing migration checkpoint and provide Android APK publish/build instructions
+- [x] Save a passing migration checkpoint and provide Android APK publish/build instructions
 - [x] Generate and apply a new dark Sports803TV launcher icon for this Manus project before checkpointing
 - [x] Replace the oversized launcher icon with a compact reference-inspired Sports803TV icon and retry the migration checkpoint
 - [x] Audit the imported Sports803TV source against the expanded specification and document verified gaps in gap-analysis.md
 - [x] Verify and remediate high-impact match discovery, Firebase normalization, player, Match Center, Live TV, search, sharing, analytics, favorites, and settings gaps without removing working features
 - [x] Assess ESPN classification and optional Sportmonks, Blogger, ImgBB, and scheduled synchronization requirements with secure configuration boundaries
 - [x] Add and run expanded contract tests for ESPN classification, Sportmonks fallback, Match Center, iframe URLs, sharing, analytics consent, AdMob safeguards, and responsive routes
-- [ ] Save a post-remediation checkpoint and provide updated APK guidance without publishing automatically
+- [x] Save a post-remediation checkpoint and provide updated APK guidance without publishing automatically
