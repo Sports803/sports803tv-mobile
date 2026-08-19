@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import * as Notifications from "expo-notifications";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
-import { ActivityIndicator, Platform, View } from "react-native";
+import { Platform } from "react-native";
 import { useFonts } from "expo-font";
 import { Poppins_700Bold, Poppins_600SemiBold } from "@expo-google-fonts/poppins";
 import { Inter_400Regular, Inter_500Medium } from "@expo-google-fonts/inter";
@@ -38,26 +38,21 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const router = useRouter();
-  const [fontsLoaded, fontError] = useFonts({ Poppins_700Bold, Poppins_600SemiBold, Inter_400Regular, Inter_500Medium });
-  const fontsReady = fontsLoaded || Boolean(fontError);
+  useFonts({ Poppins_700Bold, Poppins_600SemiBold, Inter_400Regular, Inter_500Medium });
   const initialInsets = initialWindowMetrics?.insets ?? DEFAULT_WEB_INSETS;
   const initialFrame = initialWindowMetrics?.frame ?? DEFAULT_WEB_FRAME;
 
   const [insets, setInsets] = useState<EdgeInsets>(initialInsets);
   const [frame, setFrame] = useState<Rect>(initialFrame);
-  const [startupChecked, setStartupChecked] = useState(false);
-
   useEffect(() => {
-    if (!fontsReady) return;
     let active = true;
     void getOnboardingComplete().then((completed) => {
       if (!active) return;
       const route = startupRouteFor(completed);
       if (route) router.replace(route as any);
-      setStartupChecked(true);
     });
     return () => { active = false; };
-  }, [fontsReady, router]);
+  }, [router]);
 
   useEffect(() => {
     if (Platform.OS === "web") return;
@@ -112,14 +107,6 @@ export default function RootLayout() {
       },
     };
   }, [initialInsets, initialFrame]);
-
-  if (!fontsReady || !startupChecked) {
-    return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#07101f" }}>
-        <ActivityIndicator color="#f5b800" size="large" />
-      </View>
-    );
-  }
 
   const content = (
     <GestureHandlerRootView style={{ flex: 1 }}>

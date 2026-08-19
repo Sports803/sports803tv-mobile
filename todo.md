@@ -131,3 +131,4 @@
 - [x] Select current Firebase event and Live TV channel IDs for featured placement
 - [x] Confirm the public owner configuration reaches the mobile app and provide physical Android onboarding/notification test steps
 - [x] Diagnose and fix the blank Sports803TV app preview reported after the owner-managed Home update
+- [x] Remove the persistent loading-screen startup gate reported after the preview recovery checkpoint
