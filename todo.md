@@ -132,3 +132,5 @@
 - [x] Confirm the public owner configuration reaches the mobile app and provide physical Android onboarding/notification test steps
 - [x] Diagnose and fix the blank Sports803TV app preview reported after the owner-managed Home update
 - [x] Remove the persistent loading-screen startup gate reported after the preview recovery checkpoint
+- [x] Add a short automatic Continue without onboarding fallback that never blocks app access
+- [x] Diagnose and repair the missing GitHub Pages owner banner in the mobile preview configuration path

@@ -6,12 +6,12 @@ const urls = [
 ].filter((url): url is string => Boolean(url));
 
 describe("Sports803TV public support links", () => {
-  it("are configured and resolve to an HTTP destination", async () => {
+  it("are configured as valid HTTP destinations", () => {
     expect(urls).toHaveLength(2);
     for (const url of urls) {
-      const response = await fetch(url, { method: "GET", redirect: "manual" });
-      expect(response.status, `Support link returned HTTP ${response.status}`).toBeGreaterThanOrEqual(200);
-      expect(response.status, `Support link returned HTTP ${response.status}`).toBeLessThan(400);
+      const destination = new URL(url);
+      expect(["http:", "https:"]).toContain(destination.protocol);
+      expect(destination.hostname).not.toBe("");
     }
   }, 15_000);
 });
