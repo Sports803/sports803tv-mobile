@@ -2723,6 +2723,19 @@ OneSignalDeferred.push(function(OneSignal) {
                 </b:includable>
               </b:widget>
             </b:section>
+            <!-- Static companion links: deliberately outside the original content and sidebar widget containers. -->
+            <section aria-label='Browse Sports803TV by sport' class='s803-sport-tags' id='s803-sport-tags'>
+              <div class='s803-sport-tags__head'>
+                <div class='s803-sport-tags__title'>Browse by sport</div>
+                <div class='s803-sport-tags__note'>Primary labels for auto-posted events</div>
+              </div>
+              <div class='s803-sport-tags__grid'>
+                <a class='s803-sport-tag s803-sport-tag--motorsport' href='/search/label/Motorsport'>🏎️ Motorsport<small>Formula 1 · F1 · MotoGP</small></a>
+                <a class='s803-sport-tag s803-sport-tag--basketball' href='/search/label/Basketball'>🏀 Basketball<small>NBA · WNBA · EuroLeague</small></a>
+                <a class='s803-sport-tag s803-sport-tag--fighting' href='/search/label/Fighting'>🥊 Fighting<small>Boxing · MMA · UFC</small></a>
+                <a class='s803-sport-tag s803-sport-tag--football' href='/search/label/Football'>⚽ Football<small>Soccer · Premier League · CAF</small></a>
+              </div>
+            </section>
           </div>
          
       <aside class='temabanua-main-sidebar' role='complementary'>
@@ -16570,9 +16583,8 @@ window.onload = function() {
 <style type='text/css'>
 /* Sports803TV companion: app-only Live TV and compact sport widgets */
 .s803-appgate{display:flex;gap:10px;align-items:center;margin:10px 0;padding:11px 13px;border:1px solid rgba(235,66,66,.45);border-radius:14px;background:linear-gradient(135deg,#191919,#2c1012);color:#fff;font-family:Arial,sans-serif}.s803-appgate__copy{flex:1;min-width:0}.s803-appgate__title{font-size:14px;font-weight:800}.s803-appgate__text{margin-top:3px;color:#c9c9c9;font-size:12px;line-height:1.35}.s803-appgate__button{padding:9px 11px;border-radius:10px;background:#e53935;color:#fff;font-size:12px;font-weight:800;text-decoration:none;white-space:nowrap}.s803-sport-tags{margin:14px 0;padding:13px;border:1px solid rgba(255,255,255,.12);border-radius:16px;background:#121212;color:#fff;font-family:Arial,sans-serif}.s803-sport-tags__head{display:flex;justify-content:space-between;gap:12px;margin-bottom:10px}.s803-sport-tags__title{font-size:15px;font-weight:800}.s803-sport-tags__note{font-size:11px;color:#a7a7a7;text-align:right}.s803-sport-tags__grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.s803-sport-tag{display:block;padding:10px 7px;border:1px solid rgba(255,255,255,.12);border-radius:11px;background:#1d1d1d;color:#fff;font-size:12px;font-weight:800;line-height:1.2;text-align:center;text-decoration:none}.s803-sport-tag small{display:block;overflow:hidden;margin-top:3px;color:#aaa;font-size:10px;font-weight:500;text-overflow:ellipsis;white-space:nowrap}.s803-sport-tag--motorsport{border-color:#ea4b4b}.s803-sport-tag--basketball{border-color:#f39c12}.s803-sport-tag--fighting{border-color:#a368ff}.s803-sport-tag--football{border-color:#37b977}.s803-appgate-modal{position:fixed;z-index:2147483647;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.74);font-family:Arial,sans-serif}.s803-appgate-modal__box{width:min(410px,100%);padding:23px;border:1px solid rgba(255,255,255,.14);border-radius:20px;background:#171717;color:#fff;text-align:center;box-shadow:0 22px 70px rgba(0,0,0,.55)}.s803-appgate-modal h2{margin:9px 0 7px;font-size:21px}.s803-appgate-modal p{margin:0;color:#c8c8c8;font-size:14px;line-height:1.5}.s803-appgate-modal__actions{display:flex;gap:8px;margin-top:17px}.s803-appgate-modal__actions a,.s803-appgate-modal__actions button{flex:1;padding:12px;border:0;border-radius:11px;background:#e53935;color:#fff;font-size:14px;font-weight:800;text-decoration:none}.s803-appgate-modal__actions button{background:#2a2a2a}@media(max-width:640px){.s803-ltv-w-grid{display:none!important}.s803-ltv-widget,.s803-ltv-widget-wrap,.s803-ltv-widget-container{margin:7px 0!important;padding:0!important;border:0!important;background:transparent!important}.s803-appgate{margin:7px 0;padding:10px;gap:8px}.s803-appgate__title{font-size:13px}.s803-appgate__text{font-size:11px}.s803-appgate__button{padding:8px 9px;font-size:11px}.s803-sport-tags{margin:10px 0;padding:11px;border-radius:13px}.s803-sport-tags__note{display:none}.s803-sport-tags__grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.s803-sport-tag{padding:9px 7px}.s803-appgate-modal__box{padding:20px 16px}}
-/* Prevent theme-level section or flex rules from stretching the dynamic sport panel over other widgets. */
+/* Keep the static companion panel independent from the original widget containers. */
 #s803-sport-tags.s803-sport-tags{position:relative!important;display:block!important;float:none!important;clear:both!important;width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;flex:0 0 auto!important;align-self:flex-start!important;overflow:visible!important;box-sizing:border-box!important}
-#s803-sport-tags.s803-sport-tags + *{clear:both}
 @media(max-width:640px){#s803-sport-tags.s803-sport-tags{margin:10px 0!important;padding:11px!important}#s803-sport-tags .s803-sport-tags__grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}#s803-sport-tags .s803-sport-tag{min-height:0!important}}
 </style>
 <script type='text/javascript'>
@@ -16585,27 +16597,9 @@ window.onload = function() {
   window.s803OpenLiveTV=openGate;window.s803LTVWatch=openGate;
   var oldNav=window.s803NavClick;window.s803NavClick=function(destination){if(String(destination||'').toLowerCase().indexOf('live')!==-1)return openGate();return typeof oldNav==='function'?oldNav.apply(this,arguments):undefined;};
   function replaceLiveWidget(){var widget=document.getElementById('s803-ltv-widget');if(widget){widget.innerHTML=compactPrompt();widget.style.display='block';}}
-  function addTags(){if(document.getElementById('s803-sport-tags'))return;var target=document.querySelector('.main-wrapper,.main-container,.content-wrapper,#main-wrapper,#main');if(!target)return;var tags=[['🏎️','Motorsport','Formula 1 · F1 · MotoGP','motorsport'],['🏀','Basketball','NBA · WNBA · EuroLeague','basketball'],['🥊','Fighting','Boxing · MMA · UFC','fighting'],['⚽','Football','Soccer · Premier League · CAF','football']];var box=document.createElement('section');box.id='s803-sport-tags';box.className='s803-sport-tags';box.innerHTML='<div class="s803-sport-tags__head"><div class="s803-sport-tags__title">Browse by sport</div><div class="s803-sport-tags__note">Use these primary labels for auto-posted events</div></div><div class="s803-sport-tags__grid"></div>';var grid=box.querySelector('.s803-sport-tags__grid');tags.forEach(function(tag){var link=document.createElement('a');link.className='s803-sport-tag s803-sport-tag--'+tag[3];link.href='/search/label/'+encodeURIComponent(tag[1]);link.innerHTML=tag[0]+' '+tag[1]+'<small>'+tag[2]+'</small>';grid.appendChild(link);});target.insertBefore(box,target.firstChild);}
-  function blockLinks(){document.addEventListener('click',function(e){var link=e.target.closest&&e.target.closest('a');var href=(link&&link.getAttribute('href')||'').toLowerCase();if(link&&(href.indexOf('live-tv')!==-1||href.indexOf('live%20tv')!==-1||href.indexOf('/search/label/live')!==-1)){e.preventDefault();openGate();}},true);}
-  function start(){replaceLiveWidget();addTags();blockLinks();if(/live[-_ ]?tv|live-channel/i.test(location.pathname))openGate();}
+  function blockLinks(){document.addEventListener('click',function(e){var link=e.target.closest&&e.target.getAttribute?e.target.closest('a'):null;var href=(link&&link.getAttribute('href')||'').toLowerCase();if(link&&(href.indexOf('live-tv')!==-1||href.indexOf('live%20tv')!==-1||href.indexOf('/search/label/live')!==-1)){e.preventDefault();openGate();}},true);}
+  function start(){replaceLiveWidget();blockLinks();if(/live[-_ ]?tv|live-channel/i.test(location.pathname))openGate();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(start,0);});else setTimeout(start,0);
-})();
-//]]>
-</script>
-<script type='text/javascript'>
-//<![CDATA[
-(function(){
-  function relocateSportPanel(){
-    var panel=document.getElementById('s803-sport-tags');
-    var primary=document.querySelector('.temabanua-main-prima');
-    if(!panel||!primary||panel.parentNode===primary)return;
-    primary.insertBefore(panel,primary.firstChild);
-  }
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',function(){setTimeout(relocateSportPanel,40);});
-  }else{
-    setTimeout(relocateSportPanel,40);
-  }
 })();
 //]]>
 </script>

@@ -145,3 +145,4 @@
 - [x] Fix the Browse by sport mobile widget overlay so it no longer covers other content
 - [x] Restore original mobile widgets hidden by the Browse by sport insertion-point regression
 - [x] Diagnose and repair Live TV, Watch History, Trending, remote-config, and featured-panel widget visibility on Blogger
+- [x] Restore the original Blogger widget layout and visibility, keeping companion additions isolated
