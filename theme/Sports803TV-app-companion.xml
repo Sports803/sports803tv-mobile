@@ -2643,7 +2643,7 @@ OneSignalDeferred.push(function(OneSignal) {
           <!-- Sports803TV App Install: edit this HTML widget in Blogger Layout to replace the release-page link with your published APK URL. -->
           <div class='s803-app-install-shell'>
             <b:section id='sports803-app-install' maxwidgets='1' name='Sports803TV App Install' showaddelement='no'>
-              <b:widget id='HTMLSports803AppInstall' locked='false' title='Get the Sports803TV app' type='HTML' visible='true'>
+              <b:widget id='HTML104' locked='false' title='Get the Sports803TV app' type='HTML' visible='true'>
                 <b:widget-settings>
                   <b:widget-setting name='content'><![CDATA[<section class="s803-app-install" aria-label="Get the Sports803TV app">
   <div class="s803-app-install__mark" aria-hidden="true">803</div>
