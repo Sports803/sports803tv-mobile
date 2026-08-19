@@ -8,6 +8,7 @@ const REMINDERS_KEY = "sports803:reminders";
 const REPORTS_KEY = "sports803:stream-reports";
 const DATA_SAVER_KEY = "sports803:data-saver";
 const PUSH_TOKEN_KEY = "sports803:push-token";
+const ANALYTICS_CONSENT_KEY = "sports803:analytics-consent";
 
 async function readList(key: string) {
   try { return JSON.parse((await AsyncStorage.getItem(key)) || "[]") as string[]; } catch { return []; }
@@ -27,4 +28,6 @@ export async function getDataSaver() { return (await AsyncStorage.getItem(DATA_S
 export async function setDataSaver(enabled: boolean) { await AsyncStorage.setItem(DATA_SAVER_KEY, String(enabled)); return enabled; }
 export async function savePushToken(token: string) { await AsyncStorage.setItem(PUSH_TOKEN_KEY, token); }
 export async function saveStreamReport(eventId: string, reason: string) { const current = await readList(REPORTS_KEY); const next = [`${eventId}:${reason}:${Date.now()}`, ...current]; await writeList(REPORTS_KEY, next); return next; }
-export async function clearLocalData() { await AsyncStorage.multiRemove([FAVORITES_KEY, HISTORY_KEY, TEAM_FAVORITES_KEY, LEAGUE_FAVORITES_KEY, REMINDERS_KEY, REPORTS_KEY, DATA_SAVER_KEY, PUSH_TOKEN_KEY]); }
+export async function getAnalyticsConsent() { return (await AsyncStorage.getItem(ANALYTICS_CONSENT_KEY)) === "granted"; }
+export async function setAnalyticsConsent(granted: boolean) { await AsyncStorage.setItem(ANALYTICS_CONSENT_KEY, granted ? "granted" : "declined"); return granted; }
+export async function clearLocalData() { await AsyncStorage.multiRemove([FAVORITES_KEY, HISTORY_KEY, TEAM_FAVORITES_KEY, LEAGUE_FAVORITES_KEY, REMINDERS_KEY, REPORTS_KEY, DATA_SAVER_KEY, PUSH_TOKEN_KEY, ANALYTICS_CONSENT_KEY]); }

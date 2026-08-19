@@ -1,6 +1,7 @@
 import Constants from "expo-constants";
 import { useEffect, useMemo, useState } from "react";
 import { AD_UNITS } from "@/components/ad-slot";
+import { getAnalyticsConsent } from "@/lib/local";
 
 type MobileAdsModule = typeof import("react-native-google-mobile-ads");
 
@@ -19,7 +20,9 @@ const mobileAds = getMobileAdsModule();
 
 export function useExitInterstitial() {
   const [ready, setReady] = useState(false);
-  const ad = useMemo(() => mobileAds?.InterstitialAd.createForAdRequest(AD_UNITS.playerInterstitial) ?? null, []);
+  const [hasConsent, setHasConsent] = useState(false);
+  useEffect(() => { void getAnalyticsConsent().then(setHasConsent); }, []);
+  const ad = useMemo(() => hasConsent ? mobileAds?.InterstitialAd.createForAdRequest(AD_UNITS.playerInterstitial) ?? null : null, [hasConsent]);
   useEffect(() => {
     if (!ad || !mobileAds) return;
     const loaded = ad.addAdEventListener(mobileAds.AdEventType.LOADED, () => setReady(true));

@@ -1,5 +1,8 @@
 import Constants from "expo-constants";
+import { useEffect, useState } from "react";
 import { Platform, Text, View } from "react-native";
+
+import { getAnalyticsConsent } from "@/lib/local";
 
 type MobileAdsModule = typeof import("react-native-google-mobile-ads");
 
@@ -27,7 +30,10 @@ export const AD_UNITS = {
 } as const;
 
 export function AdSlot({ unitId, label = "Sponsored" }: { unitId: string; label?: string }) {
+  const [hasConsent, setHasConsent] = useState(false);
+  useEffect(() => { void getAnalyticsConsent().then(setHasConsent); }, []);
   if (Platform.OS === "web") return <View style={{ height: 1 }} />;
+  if (!hasConsent) return <AdFallbackLabel label="Advertising is disabled until consent is enabled" />;
   if (!mobileAds) return <AdFallbackLabel label={label} />;
   const { BannerAd, BannerAdSize } = mobileAds;
   return <View accessible accessibilityLabel={`${label} advertisement`} style={{ minHeight: 52, marginVertical: 12, alignItems: "center", justifyContent: "center" }}><BannerAd unitId={unitId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} onAdFailedToLoad={() => undefined} /></View>;

@@ -22,6 +22,8 @@ import {
   type SportsEvent,
 } from "@/lib/sports";
 import { getFavorites, getHistory, getLeagueFavorites, getTeamFavorites, toggleFavorite } from "@/lib/local";
+import { classifySport } from "@/lib/match-center";
+import { trackAnalytics } from "@/lib/analytics";
 
 const categories = [
   "all",
@@ -211,7 +213,7 @@ function Skeletons() {
 const majorFootballCompetition = /premier league|epl|la liga|laliga|mls|saudi pro league|ligue 1|league 1|bundesliga|serie a|eredivisie|primeira liga|champions league|uefa champions|europa league|conference league|fa cup|coppa italia|copa del rey|dfb pokal|efl championship/i;
 
 function isMajorFootballMatch(event: SportsEvent) {
-  if (!/football|soccer/i.test(event.category)) return false;
+  if (classifySport(event.category) !== "football") return false;
   const competition = [event.leagueName, event.competitionLabel].filter(Boolean).join(" ");
   return majorFootballCompetition.test(competition);
 }
@@ -248,7 +250,7 @@ export default function HomeScreen() {
     const needle = query.trim().toLowerCase();
     const rank: Record<EventStatus, number> = { live: 0, upcoming: 1, ended: 2 };
     return events.filter((event) => {
-      const categoryMatch = selected === "all" || event.category === selected;
+      const categoryMatch = selected === "all" || classifySport(event.category) === selected;
       const currentStatus = eventStatus(event, now);
       const statusMatch = currentStatus !== "ended" && (selectedStatus === "all" || currentStatus === selectedStatus);
       const haystack = [event.homeName, event.awayName, event.leagueName, event.competitionLabel, event.category].filter(Boolean).join(" ").toLowerCase();
@@ -275,8 +277,8 @@ export default function HomeScreen() {
   const competitionNames = Array.from(new Set(events.map((event) => event.leagueName || event.competitionLabel).filter(Boolean) as string[])).slice(0, 10);
   const header = <View>
     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 10, paddingBottom: 14 }}><View><Text style={{ color: palette.red, fontSize: 12, fontWeight: "900", letterSpacing: 1.5 }}>SPORTS 803</Text><Text style={{ color: palette.text, fontSize: 28, fontWeight: "900" }}>Today’s events</Text></View><Text style={{ color: palette.muted, fontSize: 22 }}>◉</Text></View>
-    <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: palette.surface, borderColor: palette.border, borderWidth: 1, borderRadius: 16, paddingHorizontal: 12, marginBottom: 12 }}><Text style={{ color: palette.muted, fontSize: 18, marginRight: 8 }}>⌕</Text><TextInput value={query} onChangeText={setQuery} placeholder="Search teams, leagues, sports" placeholderTextColor={palette.muted} returnKeyType="search" clearButtonMode="while-editing" accessibilityLabel="Search events" style={{ flex: 1, color: palette.text, paddingVertical: 12, fontSize: 14 }} />{query ? <Pressable onPress={() => setQuery("")} hitSlop={10} accessibilityLabel="Clear event search"><Text style={{ color: palette.muted, fontSize: 18 }}>×</Text></Pressable> : null}</View>
-    <FlatList horizontal showsHorizontalScrollIndicator={false} data={categories} keyExtractor={(item) => item} contentContainerStyle={{ gap: 8, paddingBottom: 16 }} renderItem={({ item }) => <Pressable onPress={() => setSelected(item)} style={{ backgroundColor: selected === item ? palette.red : palette.surface, borderColor: selected === item ? palette.red : palette.border, borderWidth: 1, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 }}><Text style={{ color: palette.text, fontWeight: "700", fontSize: 12 }}>{item === "all" ? "All" : categoryLabel(item)}</Text></Pressable>} />
+    <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: palette.surface, borderColor: palette.border, borderWidth: 1, borderRadius: 16, paddingHorizontal: 12, marginBottom: 12 }}><Text style={{ color: palette.muted, fontSize: 18, marginRight: 8 }}>⌕</Text><TextInput value={query} onChangeText={setQuery} onSubmitEditing={() => void trackAnalytics("search", { queryLength: query.trim().length })} placeholder="Search teams, leagues, sports" placeholderTextColor={palette.muted} returnKeyType="search" clearButtonMode="while-editing" accessibilityLabel="Search events" style={{ flex: 1, color: palette.text, paddingVertical: 12, fontSize: 14 }} />{query ? <Pressable onPress={() => setQuery("")} hitSlop={10} accessibilityLabel="Clear event search"><Text style={{ color: palette.muted, fontSize: 18 }}>×</Text></Pressable> : null}</View>
+    <FlatList horizontal showsHorizontalScrollIndicator={false} data={categories} keyExtractor={(item) => item} contentContainerStyle={{ gap: 8, paddingBottom: 16 }} renderItem={({ item }) => <Pressable onPress={() => { setSelected(item); void trackAnalytics("category_filter", { category: item }); }} style={{ backgroundColor: selected === item ? palette.red : palette.surface, borderColor: selected === item ? palette.red : palette.border, borderWidth: 1, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 }}><Text style={{ color: palette.text, fontWeight: "700", fontSize: 12 }}>{item === "all" ? "All" : categoryLabel(item)}</Text></Pressable>} />
     <FlatList horizontal showsHorizontalScrollIndicator={false} data={statuses} keyExtractor={(item) => `status-${item}`} contentContainerStyle={{ gap: 8, paddingBottom: 12 }} renderItem={({ item }) => <Pressable onPress={() => setSelectedStatus(item)} style={{ backgroundColor: selectedStatus === item ? palette.elevated : "transparent", borderColor: selectedStatus === item ? palette.red : palette.border, borderWidth: 1, borderRadius: 18, paddingHorizontal: 13, paddingVertical: 8 }}><Text style={{ color: selectedStatus === item ? palette.text : palette.muted, fontWeight: "800", fontSize: 12 }}>{item === "all" ? "All statuses" : item === "live" ? "Live now" : "Upcoming"}</Text></Pressable>} />
     {competitionNames.length > 0 ? <FlatList horizontal showsHorizontalScrollIndicator={false} data={competitionNames} keyExtractor={(item) => `competition-${item}`} contentContainerStyle={{ gap: 8, paddingBottom: 12 }} renderItem={({ item }) => <Pressable onPress={() => router.push({ pathname: "/competition" as any, params: { name: item } })} style={{ backgroundColor: palette.surface, borderColor: palette.border, borderWidth: 1, borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8 }}><Text style={{ color: palette.muted, fontWeight: "800", fontSize: 11 }}>{item}</Text></Pressable>} /> : null}
     {popular.length > 0 ? <View style={{ marginBottom: 14 }}><View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 9 }}><View><Text style={{ color: palette.text, fontSize: 19, fontWeight: "900" }}>Popular matches</Text><Text style={{ color: palette.muted, fontSize: 11, marginTop: 2 }}>Top events right now</Text></View><Text style={{ color: palette.red, fontSize: 12, fontWeight: "900" }}>LIVE & FEATURED</Text></View><View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" }}>{popular.map((event) => <PopularMatchCard key={`popular-${event.id}`} event={event} width={cardWidth} favorite={favorites.includes(event.id)} onFavorite={() => void setFav(event.id)} onOpen={() => openEvent(event)} />)}</View></View> : null}

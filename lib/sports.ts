@@ -19,8 +19,12 @@ export type SportsEvent = {
   channels: StreamSource[];
   duration?: number;
   publicationStatus?: string;
+  provider?: "firebase" | "espn" | "sportmonks" | "unknown";
+  fixtureId?: string;
+  leagueId?: string;
+  eventType?: string;
 };
-export type LiveChannel = { id: string; name: string; logo?: string; src: string; category?: string; isLive?: boolean };
+export type LiveChannel = { id: string; name: string; logo?: string; src: string; category?: string; isLive?: boolean; sourceKind?: "video" | "embed" };
 
 const text = (value: unknown, fallback = "") => typeof value === "string" ? value : value == null ? fallback : String(value);
 const streamUrl = (s: StreamSource) => text(s.src || s.iframe || s.iframeUrl || s.playerUrl || s.url || s.streamUrl);
@@ -42,14 +46,17 @@ export function normalizeEvent(key: string, raw: any): SportsEvent | null {
     score: text(raw.score, "- -"), scoreHome: text(raw.scoreHome), scoreAway: text(raw.scoreAway),
     statusType: text(raw.statusType), status: text(raw.status), channels: validChannels,
     duration: Number(raw.duration || 120), publicationStatus: text(raw.publicationStatus),
+    provider: /sportmonks/i.test(text(raw.provider || raw.providerName || raw.dataProvider)) || raw.fixtureId || raw.fixture_id ? "sportmonks" : /espn/i.test(text(raw.provider || raw.providerName || raw.dataProvider)) ? "espn" : "firebase",
+    fixtureId: text(raw.fixtureId || raw.fixture_id || raw.sportmonksFixtureId), leagueId: text(raw.leagueId || raw.league_id), eventType: text(raw.eventType || raw.type),
   };
 }
 
 export function normalizeChannel(key: string, raw: any): LiveChannel | null {
   if (!raw || typeof raw !== "object") return null;
-  const src = text(raw.src || raw.url || raw.streamUrl);
-  if (!src) return null;
-  return { id: text(raw.id, key), name: text(raw.name || raw.title, "Live channel"), logo: text(raw.logo), src, category: text(raw.category, "other"), isLive: raw.isLive !== false };
+  const iframe = text(raw.iframe || raw.iframeUrl || raw.playerUrl);
+  const src = text(iframe || raw.src || raw.url || raw.streamUrl);
+  if (!/^https?:\/\//i.test(src)) return null;
+  return { id: text(raw.id, key), name: text(raw.name || raw.title, "Live channel"), logo: text(raw.logo), src, category: text(raw.category, "other"), isLive: raw.isLive !== false, sourceKind: iframe ? "embed" : "video" };
 }
 
 async function readPath(path: string, signal?: AbortSignal) {
