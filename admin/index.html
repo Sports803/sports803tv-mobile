@@ -3,29 +3,80 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sports803TV Owner Console</title>
+    <meta name="theme-color" content="#080d1b" />
+    <title>Sports803TV Owner Dashboard</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <main>
-      <p class="eyebrow">SPORTS 803</p>
-      <h1>Owner console</h1>
-      <p class="lede">Manage safe public configuration. Credentials and provider tokens never belong in this dashboard.</p>
-      <section class="actions">
-        <button id="login">Sign in as owner</button>
-        <button id="refresh" class="secondary">Refresh</button>
-        <span id="status" aria-live="polite">Checking session…</span>
+      <header class="hero">
+        <p class="eyebrow">SPORTS 803</p>
+        <h1>Owner dashboard</h1>
+        <p class="lede">Make safe changes to what viewers see in Sports803TV. Your password stays in this browser session and is never saved to GitHub.</p>
+      </header>
+
+      <section id="login-card" class="card login-card">
+        <h2>Owner sign in</h2>
+        <form id="login-form" class="form-grid">
+          <label>Username<input id="username" name="username" autocomplete="username" required /></label>
+          <label>Password<input id="password" name="password" type="password" autocomplete="current-password" required /></label>
+          <button type="submit">Open dashboard</button>
+        </form>
       </section>
-      <section id="editor" hidden>
-        <label for="key">Configuration area</label>
-        <select id="key"></select>
-        <label for="value">JSON value</label>
-        <textarea id="value" rows="16" spellcheck="false"></textarea>
-        <button id="save">Save owner change</button>
+
+      <section class="actions" aria-label="Dashboard actions">
+        <button id="refresh" class="secondary" type="button">Refresh settings</button>
+        <button id="logout" class="tertiary" type="button" hidden>Sign out</button>
+        <span id="status" aria-live="polite">Sign in to manage Sports803TV.</span>
       </section>
-      <section id="audit" hidden>
-        <h2>Recent owner changes</h2>
-        <ul id="audit-list"></ul>
+
+      <section id="dashboard" hidden>
+        <div class="grid">
+          <form id="announcement-form" class="card form-grid">
+            <div><p class="section-kicker">HOME SCREEN</p><h2>Announcement</h2><p>Show an update at the top of the app.</p></div>
+            <label>Heading<input id="announcement-title" maxlength="90" placeholder="Sports803TV update" /></label>
+            <label>Message<textarea id="announcement-message" rows="3" maxlength="500" placeholder="Tell viewers what is new."></textarea></label>
+            <label>Style<select id="announcement-tone"><option value="info">Information</option><option value="warning">Important</option></select></label>
+            <div class="button-row"><button type="submit">Save announcement</button><button class="secondary clear" data-control="announcement" type="button">Remove</button></div>
+          </form>
+
+          <form id="promotion-form" class="card form-grid">
+            <div><p class="section-kicker">PROMOTION</p><h2>Featured banner</h2><p>Promote a match, campaign, or support link.</p></div>
+            <label>Title<input id="promotion-title" maxlength="90" placeholder="Featured on Sports803TV" /></label>
+            <label>Message<textarea id="promotion-message" rows="3" maxlength="500" placeholder="Optional supporting message"></textarea></label>
+            <label>Open this link (optional)<input id="promotion-link" type="url" placeholder="https://" /></label>
+            <div class="button-row"><button type="submit">Save banner</button><button class="secondary clear" data-control="promotionBanner" type="button">Remove</button></div>
+          </form>
+
+          <form id="live-tv-form" class="card form-grid">
+            <div><p class="section-kicker">LIVE TV</p><h2>Channel spotlight</h2><p>Enter channel IDs from your Firebase Live TV list, one per line.</p></div>
+            <label>Featured channel IDs<textarea id="featured-channel-ids" rows="5" placeholder="channel-id-1&#10;channel-id-2"></textarea></label>
+            <label class="toggle"><input id="live-tv-ad" type="checkbox" checked /> Show the Live TV banner ad</label>
+            <button type="submit">Save Live TV settings</button>
+          </form>
+
+          <form id="channel-rule-form" class="card form-grid">
+            <div><p class="section-kicker">CHANNEL HEALTH</p><h2>Channel rule</h2><p>Mark a channel as reliable, having issues, offline, featured, or hidden.</p></div>
+            <label>Channel ID<input id="channel-id" required placeholder="Paste the Firebase channel ID" /></label>
+            <div class="two-column"><label>Status<select id="channel-reliability"><option value="reliable">Reliable</option><option value="issues">Having issues</option><option value="offline">Offline</option></select></label><label>Priority<input id="channel-priority" type="number" value="0" min="-100" max="100" /></label></div>
+            <label>Viewer note<input id="channel-note" maxlength="180" placeholder="Optional note shown to viewers" /></label>
+            <div class="two-column"><label class="toggle"><input id="channel-featured" type="checkbox" /> Feature this channel</label><label class="toggle"><input id="channel-hidden" type="checkbox" /> Hide this channel</label></div>
+            <button type="submit">Save channel rule</button>
+            <div id="channel-rules" class="saved-rules" aria-live="polite"></div>
+          </form>
+
+          <form id="support-form" class="card form-grid">
+            <div><p class="section-kicker">SUPPORT</p><h2>Donation links</h2><p>Keep support destinations current without changing app code.</p></div>
+            <label>Patreon link<input id="patreon-url" type="url" placeholder="https://www.patreon.com/..." /></label>
+            <label>Buy Me a Coffee link<input id="coffee-url" type="url" placeholder="https://buymeacoffee.com/..." /></label>
+            <button type="submit">Save support links</button>
+          </form>
+        </div>
+
+        <section id="audit" class="card">
+          <p class="section-kicker">HISTORY</p><h2>Recent changes</h2>
+          <ul id="audit-list"></ul>
+        </section>
       </section>
     </main>
     <script src="config.js"></script>
