@@ -115,7 +115,7 @@
 - [x] Protect owner configuration for Firebase content, featured rails, advertising, donation links, status messaging, and notifications from public modification
 - [x] Add permission-aware native match calendar export, on-device match prediction choices, and invitation sharing without adding unconsented tracking
 - [x] Create a private GitHub repository for the validated Sports803TV source and push the current checkpoint
-- [ ] Configure the static owner dashboard for GitHub Pages and report its URL plus required server settings
-- [ ] Change the Sports803TV GitHub repository visibility to public
-- [ ] Add secure server-side owner-dashboard credential access using the requested username and password without exposing credentials in GitHub Pages files
-- [ ] Simplify the owner dashboard into clear no-code configuration controls and deploy it through GitHub Pages
+- [x] Configure the static owner dashboard for GitHub Pages and report its URL plus required server settings
+- [x] Change the Sports803TV GitHub repository visibility to public
+- [x] Add secure server-side owner-dashboard credential access using the requested username and password without exposing credentials in GitHub Pages files
+- [x] Simplify the owner dashboard into clear no-code configuration controls and deploy it through GitHub Pages
