@@ -147,3 +147,4 @@
 - [x] Diagnose and repair Live TV, Watch History, Trending, remote-config, and featured-panel widget visibility on Blogger
 - [x] Restore the original Blogger widget layout and visibility, keeping companion additions isolated
 - [x] Diagnose and restore Blogger post visibility on the mobile homepage
+- [x] Repair Blogger search and add Android, iPhone Safari, and desktop install guidance

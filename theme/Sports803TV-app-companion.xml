@@ -12620,7 +12620,10 @@ window.S803_CFG = {};
   var VIP_PIN    = _c.VIP_PIN    || '8033';
   var VIP_LABEL  = _c.VIP_LABEL  || 'app-vip';
   var LIVE_LABEL = _c.LIVE_LABEL || 'Live TV';
-  var SITE_URL   = _c.SITE_URL   || 'https://sports803livestream.blogspot.com';
+  /* The companion theme may be restored to a different Blogger address.
+     Always use the site currently open in the visitor's browser for feeds,
+     searches, QR codes, and internal navigation. */
+  var SITE_URL   = window.location.protocol + '//' + window.location.host;
   var APP_LINK   = _c.APP_LINK   || '';
   var APP_NAME   = _c.app_name   || 'Sports 803';
   var APP_TAG    = _c.app_tagline|| 'Free Live Sports';
@@ -13813,8 +13816,9 @@ window.S803_CFG = {};
   function clearRecentSearches(){localStorage.removeItem('s803_recent_searches');showSearchPrompt();}
   function showSearchPrompt(){var rs=getRecentSearches();var html='<div class="s803-sr-msg"><span>🔍</span>Search for any team, match or sport</div>';if(rs.length){html='<div class="recent-searches"><div class="rs-title">Recent <button class="rs-clear" id="rs-clear-btn">Clear</button></div>';rs.forEach(function(q){html+='<div class="rs-item" data-q="'+q+'"><span class="rs-icon">🕐</span>'+q+'</div>';});html+='</div>';}if(searchRes){searchRes.innerHTML=html;var clBtn=$id('rs-clear-btn');if(clBtn)clBtn.addEventListener('click',function(){clearRecentSearches();haptic('light');});qsa('.rs-item').forEach(function(item){item.addEventListener('click',function(){var q=item.dataset.q;if(searchInput)searchInput.value=q;doSearch(q);haptic('light');});});}}
   function fmtDate(s){try{return new Date(s).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}catch(e){return'';}}
-  function doSearch(q){if(!q||q.length<2){showSearchPrompt();return;}if(q===lastQuery)return;lastQuery=q;addRecentSearch(q);trackSearch(q);if(searchRes)searchRes.innerHTML='<div style="text-align:center;padding:32px"><div style="width:28px;height:28px;border:2px solid var(--s803-border);border-top-color:var(--s803-accent);border-radius:50%;animation:ptrspin 0.7s linear infinite;display:inline-block"></div></div>';var old=$id('s803-search-script');if(old)old.remove();var s=document.createElement('script');s.id='s803-search-script';s.src=SITE_URL+'/feeds/posts/default?q='+encodeURIComponent(q)+'&max-results=12&orderby=published&alt=json&callback=s803SearchCB';s.onerror=function(){if(searchRes)searchRes.innerHTML='<div class="s803-sr-msg"><span>⚠️</span>Could not reach the server.</div>';};document.head.appendChild(s);}
-  window.s803SearchCB=function(data){if(!searchRes)return;var entries=(data.feed&&data.feed.entry)?data.feed.entry:[];if(!entries.length){searchRes.innerHTML='<div class="s803-sr-msg"><span>🔍</span>No results found.</div>';return;}var html='';entries.forEach(function(entry){var title=entry.title?entry.title['$t']:'Untitled',link='';if(entry.link)entry.link.forEach(function(l){if(l.rel==='alternate')link=l.href;});var date=entry.published?fmtDate(entry.published['$t']):'';var thumb=null;if(entry.media$thumbnail&&entry.media$thumbnail.url)thumb=entry.media$thumbnail.url.replace('/s72-c/','/s120-c/');else if(entry.content&&entry.content['$t']){var m=entry.content['$t'].match(/src="([^"]+\.(jpg|jpeg|png|webp)[^"]*)"/i);if(m)thumb=m[1];}var live=/live|stream|watch/i.test(title)?'<span class="s803-sr-live">LIVE</span>':'';var imgH=thumb?'<img class="s803-sr-thumb" src="'+thumb+'" alt="" loading="lazy" onerror="this.outerHTML=\'<div class=s803-sr-thumb-placeholder>📺</div>\'">':'<div class="s803-sr-thumb-placeholder">📺</div>';html+='<a class="s803-sr-item" href="'+link+'">'+imgH+'<div class="s803-sr-info"><div class="s803-sr-title">'+title+live+'</div><div class="s803-sr-date">'+date+'</div></div></a>';});searchRes.innerHTML=html;};
+  function searchFailure(){if(searchRes)searchRes.innerHTML='<div class="s803-sr-msg"><span>⚠️</span>Could not load Sports803 posts. Check your connection and try again.</div>';}
+  function doSearch(q){if(!q||q.length<2){showSearchPrompt();return;}if(q===lastQuery)return;lastQuery=q;addRecentSearch(q);trackSearch(q);if(searchRes)searchRes.innerHTML='<div style="text-align:center;padding:32px"><div style="width:28px;height:28px;border:2px solid var(--s803-border);border-top-color:var(--s803-accent);border-radius:50%;animation:ptrspin 0.7s linear infinite;display:inline-block"></div></div>';var old=$id('s803-search-script');if(old)old.remove();if(window._s803SearchTimer)clearTimeout(window._s803SearchTimer);var s=document.createElement('script');s.id='s803-search-script';var searchOrigin=window.location.protocol+'//'+window.location.host;s.src=searchOrigin+'/feeds/posts/default?q='+encodeURIComponent(q)+'&max-results=12&orderby=published&alt=json-in-script&callback=s803SearchCB';s.onerror=function(){if(window._s803SearchTimer)clearTimeout(window._s803SearchTimer);searchFailure();};window._s803SearchTimer=setTimeout(searchFailure,10000);document.head.appendChild(s);}
+  window.s803SearchCB=function(data){if(window._s803SearchTimer)clearTimeout(window._s803SearchTimer);if(!searchRes)return;var entries=(data.feed&&data.feed.entry)?data.feed.entry:[];if(!entries.length){searchRes.innerHTML='<div class="s803-sr-msg"><span>🔍</span>No results found.</div>';return;}var html='';entries.forEach(function(entry){var title=entry.title?entry.title['$t']:'Untitled',link='';if(entry.link)entry.link.forEach(function(l){if(l.rel==='alternate')link=l.href;});var date=entry.published?fmtDate(entry.published['$t']):'';var thumb=null;if(entry.media$thumbnail&&entry.media$thumbnail.url)thumb=entry.media$thumbnail.url.replace('/s72-c/','/s120-c/');else if(entry.content&&entry.content['$t']){var m=entry.content['$t'].match(/src="([^"]+\.(jpg|jpeg|png|webp)[^"]*)"/i);if(m)thumb=m[1];}var live=/live|stream|watch/i.test(title)?'<span class="s803-sr-live">LIVE</span>':'';var imgH=thumb?'<img class="s803-sr-thumb" src="'+thumb+'" alt="" loading="lazy" onerror="this.outerHTML=\'<div class=s803-sr-thumb-placeholder>📺</div>\'">':'<div class="s803-sr-thumb-placeholder">📺</div>';html+='<a class="s803-sr-item" href="'+link+'">'+imgH+'<div class="s803-sr-info"><div class="s803-sr-title">'+title+live+'</div><div class="s803-sr-date">'+date+'</div></div></a>';});searchRes.innerHTML=html;};
   function openSearch(){if(searchPanel){searchPanel.classList.add('show');setTimeout(function(){if(searchInput)searchInput.focus();},100);showSearchPrompt();haptic('light');}}
   function closeSearch(){if(searchPanel)searchPanel.classList.remove('show');if(searchInput)searchInput.value='';lastQuery='';showSearchPrompt();}
 
@@ -14904,7 +14908,7 @@ body.s803-light .sports-grid-item { background: #fff; border-color: #e0ddd8; col
       /* If we're on a post page, go to home */
       var isHome = /^\/?$|\/index\.html$/.test(window.location.pathname);
       if(!isHome){
-        var su = (window.S803_CFG && window.S803_CFG.SITE_URL) || 'https://sports803livestream.blogspot.com';
+        var su = window.location.protocol + '//' + window.location.host;
         window.location.href = su;
       }
       return;
@@ -15006,7 +15010,7 @@ body.s803-light .sports-grid-item { background: #fff; border-color: #e0ddd8; col
           e.preventDefault();
           if(window._s803DeferredPrompt) window._s803DeferredPrompt.prompt();
           else {
-            var su = (window.S803_CFG && window.S803_CFG.SITE_URL) || 'https://sports803livestream.blogspot.com';
+            var su = window.location.protocol + '//' + window.location.host;
             window.location.href = su + '?install=1';
           }
         });
@@ -15136,7 +15140,7 @@ body.s803-light .sports-grid-item { background: #fff; border-color: #e0ddd8; col
     var c = document.getElementById('sports-grid-panel');
     if(!c || c.dataset.built) return;
     c.dataset.built = '1';
-    var su = (window.S803_CFG && window.S803_CFG.SITE_URL) || 'https://sports803livestream.blogspot.com';
+    var su = window.location.protocol + '//' + window.location.host;
     SPORTS.forEach(function(s){
       var a = document.createElement('a');
       a.className = 'sports-grid-item';
@@ -15527,8 +15531,7 @@ body.s803-light .sports-grid-item { background: #fff; border-color: #e0ddd8; col
       var isHome = window.location.pathname === '/' ||
                    /^\/?$|\/index\.html$/.test(window.location.pathname);
       if (!isHome) {
-        var su = (window.S803_CFG && window.S803_CFG.SITE_URL) ||
-                 'https://sports803livestream.blogspot.com';
+        var su = window.location.protocol + '//' + window.location.host;
         window.location.href = su;
       }
       return;
@@ -15648,8 +15651,7 @@ body.s803-light .sports-grid-item { background: #fff; border-color: #e0ddd8; col
     var c = $id('sports-grid-panel');
     if (!c || c.dataset.built) return;
     c.dataset.built = '1';
-    var su = (window.S803_CFG && window.S803_CFG.SITE_URL) ||
-             'https://sports803livestream.blogspot.com';
+    var su = window.location.protocol + '//' + window.location.host;
     SPORTS.forEach(function (s) {
       var a = document.createElement('a');
       a.className = 'sports-grid-item';
@@ -15729,8 +15731,7 @@ body.s803-light .sports-grid-item { background: #fff; border-color: #e0ddd8; col
           e.preventDefault();
           if (window._s803DeferredPrompt) window._s803DeferredPrompt.prompt();
           else {
-            var su = (window.S803_CFG && window.S803_CFG.SITE_URL) ||
-                     'https://sports803livestream.blogspot.com';
+            var su = window.location.protocol + '//' + window.location.host;
             window.location.href = su + '?install=1';
           }
         });
@@ -16616,9 +16617,29 @@ window.onload = function() {
   function render(entries,widget){var blog=widget.querySelector('.temabanua-post-blog');if(!blog)return;var old=blog.querySelector('.s803-home-feed');if(old)old.remove();var status=blog.querySelector('.status-msg-wrap,.status-msg-body,.status-msg');if(status)status.remove();var feed=document.createElement('div');feed.className='s803-home-feed';entries.slice(0,FEED_LIMIT).forEach(function(entry){var card=document.createElement('a');card.className='s803-home-feed__card';card.href=postUrl(entry);var image=thumbnail(entry);if(image){var img=document.createElement('img');img.className='s803-home-feed__image';img.src=image;img.alt='';img.loading='lazy';img.onerror=function(){this.replaceWith(Object.assign(document.createElement('div'),{className:'s803-home-feed__empty',textContent:'🏟️'}));};card.appendChild(img);}else{var empty=document.createElement('div');empty.className='s803-home-feed__empty';empty.textContent='🏟️';card.appendChild(empty);}var body=document.createElement('div');body.className='s803-home-feed__body';var tag=document.createElement('span');tag.className='s803-home-feed__label';tag.textContent=label(entry);var title=document.createElement('span');title.className='s803-home-feed__title';title.textContent=text(entry&&entry.title&&entry.title.$t)||'Sports803 update';body.appendChild(tag);body.appendChild(title);card.appendChild(body);feed.appendChild(card);});blog.appendChild(feed);}
   function start(){if(!homepage())return;var widget=document.getElementById('Blog1');if(!widget||widget.dataset.s803FeedFallback)return;var statusText=text(widget.innerText);if(statusText.indexOf('No results found')===-1)return;widget.dataset.s803FeedFallback='loading';injectStyles();var callback='s803HomepageFeedCallback';window[callback]=function(payload){try{var entries=payload&&payload.feed&&payload.feed.entry||[];if(entries.length)render(entries,widget);else widget.dataset.s803FeedFallback='empty';}finally{delete window[callback];}};var script=document.createElement('script');script.src='/feeds/posts/default?alt=json-in-script&max-results='+FEED_LIMIT+'&callback='+callback;script.async=true;script.onerror=function(){widget.dataset.s803FeedFallback='failed';delete window[callback];};document.head.appendChild(script);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(start,0);});else setTimeout(start,0);
-})();
-//]]>
-</script>
-</body>
+	})();
+	//]]>
+	</script>
+	<script type='text/javascript'>
+	//<![CDATA[
+	/* Companion install nudge. Blogger themes cannot create an iOS automatic
+	   install prompt, so Safari visitors are sent to clear Add to Home Screen
+	   steps. Supported desktop browsers use the native prompt when available. */
+	(function(){
+	  var ua=navigator.userAgent||'';
+	  var ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+	  var android=/Android/i.test(ua);
+	  var standalone=window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
+	  var directPage=/(?:\?|&)install=1(?:&|$)/.test(location.search);
+	  var key='s803_platform_install_nudge_until';
+	  function later(){try{localStorage.setItem(key,String(Date.now()+3*24*60*60*1000));}catch(e){}}
+	  function allowed(){try{return Number(localStorage.getItem(key)||0)<Date.now();}catch(e){return true;}}
+	  function css(){if(document.getElementById('s803-platform-install-style'))return;var style=document.createElement('style');style.id='s803-platform-install-style';style.textContent='#s803-platform-install{position:fixed;z-index:2147483600;right:16px;bottom:18px;width:min(348px,calc(100vw - 32px));padding:16px;border:1px solid rgba(255,255,255,.15);border-radius:16px;background:#171717;color:#fff;box-shadow:0 16px 46px rgba(0,0,0,.48);font-family:Arial,sans-serif}#s803-platform-install h2{margin:0 28px 6px 0;font-size:17px;line-height:1.25}#s803-platform-install p{margin:0;color:#c9c9c9;font-size:13px;line-height:1.45}#s803-platform-install button{width:100%;margin-top:12px;padding:11px;border:0;border-radius:10px;background:#e53935;color:#fff;font-size:13px;font-weight:800;cursor:pointer}#s803-platform-install .s803-pi-close{position:absolute;top:8px;right:9px;width:auto;margin:0;padding:5px 8px;background:transparent;color:#ddd;font-size:20px;font-weight:400;line-height:1}@media(max-width:640px){#s803-platform-install{right:12px;bottom:12px;width:calc(100vw - 24px);box-sizing:border-box}}';document.head.appendChild(style);}
+	  function show(){if(standalone||directPage||android||!allowed()||document.getElementById('s803-platform-install'))return;css();var box=document.createElement('aside');box.id='s803-platform-install';box.setAttribute('role','dialog');box.setAttribute('aria-label','Install Sports 803');var title=ios?'Add Sports 803 to your iPhone':'Install Sports 803 on your computer';var copy=ios?'Use Safari, tap Share, then choose “Add to Home Screen”.':'Install from your browser for faster launch and a standalone window.';var action=ios?'Show iPhone steps':'Install or show desktop steps';box.innerHTML='<button class="s803-pi-close" type="button" aria-label="Not now">×</button><h2>'+title+'</h2><p>'+copy+'</p><button class="s803-pi-action" type="button">'+action+'</button>';box.querySelector('.s803-pi-close').addEventListener('click',function(){later();box.remove();});box.querySelector('.s803-pi-action').addEventListener('click',function(){if(!ios&&window._s803DeferredPrompt){window._s803DeferredPrompt.prompt();}else{location.href=location.origin+'?install=1';}});document.body.appendChild(box);}
+	  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(show,3200);});else setTimeout(show,3200);
+	})();
+	//]]>
+	</script>
+	</body>
 
 </html>
