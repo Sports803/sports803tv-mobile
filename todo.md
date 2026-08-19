@@ -137,3 +137,6 @@
 - [x] Adapt the supplied Sports803 Blogger XML theme as a responsive companion to the mobile app
 - [x] Add configurable APK installation prompts and download links throughout the Blogger theme without hard-coding an unavailable APK URL
 - [x] Improve the Blogger theme’s mobile, tablet, and desktop widget layout while preserving template compatibility
+- [x] Make Blogger Live TV access app-only and route visitors to the Android app installation prompt
+- [x] Reduce the oversized mobile Live TV/widget presentation shown on the Blogger site while retaining readable controls
+- [x] Add compatible Motorsport, Basketball, Fighting, and Football category widgets with auto-poster tag guidance
