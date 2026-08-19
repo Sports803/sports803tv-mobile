@@ -144,3 +144,4 @@
 - [x] Redesign the Blogger app-install and Live TV widgets for compact responsive phone, tablet, and desktop layouts
 - [x] Fix the Browse by sport mobile widget overlay so it no longer covers other content
 - [x] Restore original mobile widgets hidden by the Browse by sport insertion-point regression
+- [x] Diagnose and repair Live TV, Watch History, Trending, remote-config, and featured-panel widget visibility on Blogger

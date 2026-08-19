@@ -2481,6 +2481,23 @@ body {
     return id;
   };
   const DEVICE_ID = getDeviceId();
+  // Public diagnostic helpers for the browser console. These expose only the
+  // read checks already performed by the visible widgets; they do not expose
+  // credentials or private user data.
+  window.s803OnDomReady = function(callback) {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', callback, { once: true });
+    else callback();
+  };
+  window.s803WidgetDiagnostics = function() {
+    var paths = ['config', 'livetv/channels', 'trending'];
+    return Promise.all(paths.map(function(path) {
+      return rtdb.ref(path).once('value').then(function(snapshot) {
+        return { path: path, readable: true, exists: snapshot.exists(), count: snapshot.exists() && typeof snapshot.val() === 'object' ? Object.keys(snapshot.val()).length : 0 };
+      }).catch(function(error) {
+        return { path: path, readable: false, error: error && error.message ? error.message : String(error) };
+      });
+    }));
+  };
 //]]>
 </script>
 
@@ -2752,9 +2769,9 @@ OneSignalDeferred.push(function(OneSignal) {
                              '<img src="'+(p.thumbnail||'')+'" style="width:54px; height:36px; border-radius:6px; object-fit:cover; background:#111; border:1px solid rgba(255,255,255,0.1);">' +
                              '<div style="flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:500; font-size:13px;">'+p.title+'</div></a>';
                     }).join('');
-                  });
+                  }, function() { feed.innerHTML = 'Likes are unavailable right now.'; });
                 };
-                document.addEventListener('DOMContentLoaded', renderSidebarLiked);
+                s803OnDomReady(renderSidebarLiked);
               </script>]]></b:widget-setting>
           </b:widget-settings>
           <b:includable id='main'>
@@ -2780,9 +2797,9 @@ OneSignalDeferred.push(function(OneSignal) {
                              '<img src="'+(p.thumbnail||'')+'" style="width:54px; height:36px; border-radius:6px; object-fit:cover; background:#111; border:1px solid rgba(255,255,255,0.1);">' +
                              '<div style="flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:500; font-size:13px;">'+p.title+'</div></a>';
                     }).join('');
-                  });
+                  }, function() { feed.innerHTML = 'Saved posts are unavailable right now.'; });
                 };
-                document.addEventListener('DOMContentLoaded', renderSidebarSaved);
+                s803OnDomReady(renderSidebarSaved);
               </script>]]></b:widget-setting>
           </b:widget-settings>
           <b:includable id='main'>
@@ -2800,7 +2817,7 @@ OneSignalDeferred.push(function(OneSignal) {
                   var feed = document.getElementById('sidebar-history-feed');
                   if(!feed) return;
                   rtdb.ref('user_history/' + DEVICE_ID).limitToLast(10).on('value', (snapshot) => {
-                    if(!snapshot.exists()) { feed.innerHTML = 'No history yet.'; return; }
+                    if(!snapshot.exists()) { feed.innerHTML = 'No history in this browser yet. History is created when you open posts on this device.'; return; }
                     var data = snapshot.val();
                     var posts = Object.values(data).sort((a,b) => b.ts - a.ts);
                     feed.innerHTML = posts.map(function(p) {
@@ -2808,9 +2825,9 @@ OneSignalDeferred.push(function(OneSignal) {
                              '<img src="'+(p.thumb||'')+'" style="width:54px; height:36px; border-radius:6px; object-fit:cover; background:#111; border:1px solid rgba(255,255,255,0.1);">' +
                              '<div style="flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:500; font-size:13px;">'+p.title+'</div></a>';
                     }).join('');
-                  });
+                  }, function() { feed.innerHTML = 'Watch history is unavailable right now.'; });
                 };
-                document.addEventListener('DOMContentLoaded', renderSidebarHistory);
+                s803OnDomReady(renderSidebarHistory);
               </script>]]></b:widget-setting>
           </b:widget-settings>
           <b:includable id='main'>
@@ -2855,9 +2872,11 @@ OneSignalDeferred.push(function(OneSignal) {
                       `;
                       feed.appendChild(item);
                     });
+                  }, function() {
+                    feed.innerHTML = '<div style="text-align:center; padding:20px; color:rgba(255,255,255,0.5);">Trending is unavailable right now. Please refresh later.</div>';
                   });
                 }
-                document.addEventListener('DOMContentLoaded', initTrendingSidebar);
+                s803OnDomReady(initTrendingSidebar);
               </script>]]></b:widget-setting>
           </b:widget-settings>
           <b:includable id='main'>
@@ -3116,6 +3135,9 @@ OneSignalDeferred.push(function(OneSignal) {
       Object.keys(data).forEach(function (k) { channels.push(Object.assign({ _key: k }, data[k])); });
       channels.sort(function(a,b){ return (a.order||0)-(b.order||0); });
       renderChannels(channels);
+    }, function () {
+      feed = document.getElementById('sidebar-livetv-feed');
+      if (feed) feed.innerHTML = '<span style="color:rgba(255,255,255,0.55);font-size:12px;">Channels are unavailable right now. Please refresh later.</span>';
     });
   }
 
