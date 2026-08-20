@@ -2,6 +2,7 @@ import Constants from "expo-constants";
 import { useEffect, useMemo, useState } from "react";
 import { AD_UNITS } from "@/components/ad-slot";
 import { getAnalyticsConsent } from "@/lib/local";
+import { trackAnalytics } from "@/lib/analytics";
 
 type MobileAdsModule = typeof import("react-native-google-mobile-ads");
 
@@ -27,8 +28,10 @@ export function useExitInterstitial() {
     if (!ad || !mobileAds) return;
     const loaded = ad.addAdEventListener(mobileAds.AdEventType.LOADED, () => setReady(true));
     const closed = ad.addAdEventListener(mobileAds.AdEventType.CLOSED, () => { setReady(false); ad.load(); });
+    const impression = ad.addAdEventListener(mobileAds.AdEventType.OPENED, () => void trackAnalytics("ad_impression", { surface: "exit-interstitial" }));
+    const clicked = ad.addAdEventListener(mobileAds.AdEventType.CLICKED, () => void trackAnalytics("ad_tap", { surface: "exit-interstitial" }));
     ad.load();
-    return () => { loaded(); closed(); };
+    return () => { loaded(); closed(); impression(); clicked(); };
   }, [ad]);
   return { showOnExit: () => { if (ready && ad) ad.show(); } };
 }

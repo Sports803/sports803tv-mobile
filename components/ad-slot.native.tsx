@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Platform, Text, View } from "react-native";
 
 import { getAnalyticsConsent } from "@/lib/local";
+import { trackAnalytics } from "@/lib/analytics";
 
 type MobileAdsModule = typeof import("react-native-google-mobile-ads");
 
@@ -36,7 +37,7 @@ export function AdSlot({ unitId, label = "Sponsored" }: { unitId: string; label?
   if (!hasConsent) return <AdFallbackLabel label="Advertising is disabled until consent is enabled" />;
   if (!mobileAds) return <AdFallbackLabel label={label} />;
   const { BannerAd, BannerAdSize } = mobileAds;
-  return <View accessible accessibilityLabel={`${label} advertisement`} style={{ minHeight: 52, marginVertical: 12, alignItems: "center", justifyContent: "center" }}><BannerAd unitId={unitId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} onAdFailedToLoad={() => undefined} /></View>;
+  return <View accessible accessibilityLabel={`${label} advertisement`} style={{ minHeight: 52, marginVertical: 12, alignItems: "center", justifyContent: "center" }}><BannerAd unitId={unitId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} onAdImpression={() => void trackAnalytics("ad_impression", { surface: "ad-banner", placement: label })} onAdClicked={() => void trackAnalytics("ad_tap", { surface: "ad-banner", placement: label })} onAdFailedToLoad={() => undefined} /></View>;
 }
 
 export function AdFallbackLabel({ label = "Sponsored" }: { label?: string }) { return <Text style={{ color: "#66718A", fontSize: 10 }}>{label}</Text>; }

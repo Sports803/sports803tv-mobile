@@ -21,6 +21,7 @@ import {
 import type { EdgeInsets, Metrics, Rect } from "react-native-safe-area-context";
 
 import { trpc, createTRPCClient } from "@/lib/trpc";
+import { trackAnalytics, trackAnalyticsActivation } from "@/lib/analytics";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
 import { getOnboardingComplete } from "@/lib/local";
 import { startupRouteFor } from "@/lib/startup-contract";
@@ -45,6 +46,8 @@ export default function RootLayout() {
   const [insets, setInsets] = useState<EdgeInsets>(initialInsets);
   const [frame, setFrame] = useState<Rect>(initialFrame);
   useEffect(() => {
+    void trackAnalytics("app_open", { surface: "root" });
+    void trackAnalyticsActivation();
     let active = true;
     void getOnboardingComplete().then((completed) => {
       if (!active) return;
@@ -58,7 +61,7 @@ export default function RootLayout() {
     if (Platform.OS === "web") return;
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
       const eventId = response.notification.request.content.data?.eventId;
-      if (typeof eventId === "string") router.push({ pathname: "/player" as any, params: { eventId } });
+      if (typeof eventId === "string") { void trackAnalytics("notification_open", { eventId, surface: "notification" }); router.push({ pathname: "/player" as any, params: { eventId } }); }
     });
     return () => subscription.remove();
   }, [router]);

@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { index, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -46,6 +46,28 @@ export const ownerControlAudit = mysqlTable("ownerControlAudit", {
   actorOpenId: varchar("actorOpenId", { length: 64 }).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
+
+/**
+ * Consented product telemetry. The database stores a server-side hash of an
+ * anonymous installation token, never an account identifier, email, IP address,
+ * precise location, stream URL, or free-form user input.
+ */
+export const analyticsEvents = mysqlTable("analyticsEvents", {
+  id: int("id").autoincrement().primaryKey(),
+  anonymousInstallHash: varchar("anonymousInstallHash", { length: 64 }).notNull(),
+  eventName: varchar("eventName", { length: 48 }).notNull(),
+  dateKey: varchar("dateKey", { length: 10 }).notNull(),
+  surface: varchar("surface", { length: 48 }),
+  contentId: varchar("contentId", { length: 160 }),
+  countryCode: varchar("countryCode", { length: 2 }),
+  platform: varchar("platform", { length: 16 }),
+  properties: text("properties"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  index("analytics_date_idx").on(table.dateKey),
+  index("analytics_event_idx").on(table.eventName),
+  index("analytics_country_idx").on(table.countryCode),
+]);
 
 export type OwnerControlConfig = typeof ownerControlConfig.$inferSelect;
 export type InsertOwnerControlConfig = typeof ownerControlConfig.$inferInsert;

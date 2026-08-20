@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { SupportActions } from "@/components/support-actions";
-import { trackAnalytics } from "@/lib/analytics";
+import { trackAnalytics, trackAnalyticsActivation } from "@/lib/analytics";
 import { clearLocalData, getAnalyticsConsent, getAppLanguage, getDataSaver, getLeagueFavorites, getNotificationsEnabled, getTeamFavorites, setAnalyticsConsent, setAppLanguage, setDataSaver, setNotificationsEnabled, type AppLanguage, toggleLeagueFavorite, toggleTeamFavorite } from "@/lib/local";
 import { cancelAllMatchReminders, requestNotificationPermission } from "@/lib/notifications";
 import { shareSports803 } from "@/lib/sharing";
@@ -30,7 +30,7 @@ export default function MoreScreen() {
   useEffect(() => { void load(); void getDataSaver().then(setDataSaverState); void getAnalyticsConsent().then(setAnalyticsConsentState); void getNotificationsEnabled().then(setNotificationsEnabledState); void getAppLanguage().then(setLanguage); }, [load]);
   const teamOptions = useMemo(() => Array.from(new Set(events.flatMap((event) => [event.homeName, event.awayName].filter(Boolean) as string[]))).slice(0, 12), [events]);
   const leagueOptions = useMemo(() => Array.from(new Set(events.map((event) => event.leagueName || event.competitionLabel).filter(Boolean) as string[])).slice(0, 12), [events]);
-  const setConsent = async (granted: boolean) => { setAnalyticsConsentState(await setAnalyticsConsent(granted)); if (granted) void trackAnalytics("tab_view", { tab: "more", consent: true }); };
+  const setConsent = async (granted: boolean) => { setAnalyticsConsentState(await setAnalyticsConsent(granted)); if (granted) { void trackAnalyticsActivation(); void trackAnalytics("tab_view", { tab: "more", consent: true }); } };
 
   return (
     <ScreenContainer containerClassName="bg-background" className="px-4">
@@ -47,7 +47,7 @@ export default function MoreScreen() {
 
           <View style={card}><Text style={{ color: "#F7F8FC", fontSize: 17, fontWeight: "800" }}>Appearance & language</Text><Text style={{ color: "#9AA6BE", marginTop: 7, lineHeight: 19 }}>Choose the colors you prefer. Language preference is saved for future translated Sports803TV content; provider and Blogger headlines remain in their published language.</Text><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 14 }}><Pressable onPress={() => setColorScheme("dark")} style={{ backgroundColor: colorScheme === "dark" ? "#E0102A" : "#17213A", borderRadius: 16, paddingHorizontal: 11, paddingVertical: 9 }}><Text style={{ color: "#F7F8FC", fontWeight: "800", fontSize: 12 }}>Dark</Text></Pressable><Pressable onPress={() => setColorScheme("light")} style={{ backgroundColor: colorScheme === "light" ? "#E0102A" : "#17213A", borderRadius: 16, paddingHorizontal: 11, paddingVertical: 9 }}><Text style={{ color: "#F7F8FC", fontWeight: "800", fontSize: 12 }}>Light</Text></Pressable></View><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 }}>{([ ["en", "English"], ["es", "Español"], ["fr", "Français"], ["pt", "Português"] ] as const).map(([value, label]) => <Pressable key={value} onPress={async () => setLanguage(await setAppLanguage(value))} style={{ backgroundColor: language === value ? "#E0102A" : "#17213A", borderRadius: 16, paddingHorizontal: 11, paddingVertical: 9 }}><Text style={{ color: "#F7F8FC", fontWeight: "800", fontSize: 12 }}>{label}</Text></Pressable>)}</View></View>
 
-          <View style={card}><Text style={{ color: "#F7F8FC", fontSize: 17, fontWeight: "800" }}>Privacy & analytics</Text><Text style={{ color: "#9AA6BE", marginTop: 8, lineHeight: 19 }}>Optional analytics help improve searches, player reliability, and feature discovery. No event is recorded until you opt in.</Text><Pressable onPress={() => void setConsent(!analyticsConsent)} style={{ marginTop: 14 }}><Text style={{ color: analyticsConsent ? "#36D399" : "#9AA6BE", fontWeight: "900" }}>{analyticsConsent ? "✓ Analytics enabled" : "Enable anonymous analytics"}</Text></Pressable><Text style={{ color: "#66718A", fontSize: 11, marginTop: 8 }}>Firebase Analytics requires native Firebase configuration before production events can be delivered.</Text></View>
+          <View style={card}><Text style={{ color: "#F7F8FC", fontSize: 17, fontWeight: "800" }}>Privacy & analytics</Text><Text style={{ color: "#9AA6BE", marginTop: 8, lineHeight: 19 }}>Optional analytics measure anonymous app activity, stream performance, feature use, and broad device-region trends. No event is recorded until you opt in. Names, messages, stream URLs, precise location, and private preferences are not sent.</Text><Pressable onPress={() => void setConsent(!analyticsConsent)} style={{ marginTop: 14 }}><Text style={{ color: analyticsConsent ? "#36D399" : "#9AA6BE", fontWeight: "900" }}>{analyticsConsent ? "✓ Anonymous analytics enabled" : "Enable anonymous analytics"}</Text></Pressable><Text style={{ color: "#66718A", fontSize: 11, marginTop: 8 }}>You can turn this off or clear local data at any time.</Text></View>
 
           <View style={card}><SupportActions /></View>
 

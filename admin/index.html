@@ -91,6 +91,22 @@
           </form>
         </div>
 
+        <section id="analytics" class="card">
+          <div class="analytics-heading"><div><p class="section-kicker">CONSENTED AUDIENCE</p><h2>Analytics overview</h2><p>Aggregate activity from viewers who opted in. Individual devices, names, and stream URLs are never shown here.</p></div><span id="analytics-period" class="analytics-period">Last 30 days</span></div>
+          <div class="analytics-stat-grid" aria-live="polite">
+            <article class="analytics-stat"><span>Active devices</span><strong id="analytics-active-devices">—</strong></article>
+            <article class="analytics-stat"><span>Total events</span><strong id="analytics-total-events">—</strong></article>
+            <article class="analytics-stat"><span>Activations</span><strong id="analytics-activations">—</strong></article>
+            <article class="analytics-stat"><span>Stream starts</span><strong id="analytics-stream-starts">—</strong></article>
+            <article class="analytics-stat"><span>Player opens</span><strong id="analytics-player-opens">—</strong></article>
+          </div>
+          <div class="analytics-grid">
+            <article><h3>Top countries</h3><ul id="analytics-countries" class="analytics-list"></ul></article>
+            <article><h3>Top activity</h3><ul id="analytics-events" class="analytics-list"></ul></article>
+            <article><h3>Daily activity</h3><div id="analytics-daily" class="analytics-daily"></div></article>
+          </div>
+        </section>
+
         <section id="audit" class="card">
           <p class="section-kicker">HISTORY</p><h2>Recent changes</h2>
           <ul id="audit-list"></ul>

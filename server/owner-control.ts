@@ -1,10 +1,12 @@
 import type { Express, Request, Response } from "express";
-import { timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { SignJWT, jwtVerify } from "jose";
 import {
+  getAnalyticsSummary,
   isOwnerControlKey,
   listOwnerControlAudit,
   listOwnerControlConfig,
+  recordAnalyticsEvent,
   upsertOwnerControlConfig,
 } from "./db";
 import { sdk } from "./_core/sdk";
@@ -105,6 +107,29 @@ export function registerOwnerControlRoutes(app: Express) {
     res.json({ config: await listOwnerControlConfig("public") });
   });
 
+  app.post("/api/public/analytics/event", async (req, res) => {
+    const body = req.body ?? {};
+    if (typeof body.anonymousInstallId !== "string" || !/^s803-[a-z0-9-]{12,80}$/i.test(body.anonymousInstallId) || typeof body.eventName !== "string") {
+      res.status(400).json({ error: "Invalid anonymous analytics event" });
+      return;
+    }
+    try {
+      await recordAnalyticsEvent({
+        anonymousInstallHash: createHash("sha256").update(body.anonymousInstallId).digest("hex"),
+        eventName: body.eventName,
+        surface: body.surface,
+        contentId: body.contentId,
+        countryCode: body.countryCode,
+        platform: body.platform,
+        properties: body.properties && typeof body.properties === "object" && !Array.isArray(body.properties) ? body.properties : undefined,
+      });
+      res.status(202).json({ ok: true });
+    } catch (error) {
+      console.warn("[analytics] event rejected", error instanceof Error ? error.message : "unknown");
+      res.status(400).json({ error: "Analytics event was not accepted" });
+    }
+  });
+
   app.get("/api/admin/control-config", async (req, res) => {
     const owner = await requireOwner(req, res);
     if (!owner) return;
@@ -132,5 +157,17 @@ export function registerOwnerControlRoutes(app: Express) {
     const owner = await requireOwner(req, res);
     if (!owner) return;
     res.json({ audit: await listOwnerControlAudit() });
+  });
+
+  app.get("/api/admin/analytics/summary", async (req, res) => {
+    const owner = await requireOwner(req, res);
+    if (!owner) return;
+    const requestedDays = Number(req.query.days ?? 30);
+    try {
+      res.json({ summary: await getAnalyticsSummary(Number.isFinite(requestedDays) ? requestedDays : 30) });
+    } catch (error) {
+      console.warn("[analytics] summary unavailable", error instanceof Error ? error.message : "unknown");
+      res.status(503).json({ error: "Analytics summary is unavailable" });
+    }
   });
 }

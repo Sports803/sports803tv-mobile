@@ -148,3 +148,8 @@
 - [x] Restore the original Blogger widget layout and visibility, keeping companion additions isolated
 - [x] Diagnose and restore Blogger post visibility on the mobile homepage
 - [x] Repair Blogger search and add Android, iPhone Safari, and desktop install guidance
+- [x] Diagnose the Android build stalled at 1% without starting a new build
+- [x] Add consent-gated owner analytics for installs, event engagement, stream starts, and aggregated country trends
+- [x] Track consented app navigation, event discovery, player lifecycle, support actions, ad interactions, reminders, sharing, errors, and aggregated regional audience signals
+- [x] Add protected aggregate analytics reports to the GitHub Pages owner dashboard with no individual viewer records
+- [x] Instrument consented native banner and exit-interstitial ad impressions and taps

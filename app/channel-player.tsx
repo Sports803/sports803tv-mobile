@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Modal, Pressable, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEvent } from "expo";
 import { useVideoPlayer, VideoView } from "expo-video";
 
 import { ScreenContainer } from "@/components/screen-container";
@@ -8,21 +9,46 @@ import { SupportActions } from "@/components/support-actions";
 import { AdSlot, AD_UNITS } from "@/components/ad-slot";
 import { IframePlayer } from "@/components/iframe-player";
 import { fetchChannels, type LiveChannel } from "@/lib/sports";
+import { trackAnalytics } from "@/lib/analytics";
 
 export default function ChannelPlayerScreen() {
   const router = useRouter();
   const { channelId } = useLocalSearchParams<{ channelId: string }>();
   const [channels, setChannels] = useState<LiveChannel[]>([]);
   const [immersive, setImmersive] = useState(false);
+  const openedChannelRef = useRef("");
+  const streamStartedRef = useRef("");
+  const streamErrorRef = useRef("");
   useEffect(() => { void fetchChannels().then(setChannels); }, []);
 
   const channel = channels.find((item) => item.id === channelId);
   const directVideoSource = channel?.sourceKind === "video" ? channel.src : null;
   const player = useVideoPlayer(directVideoSource, (instance) => { if (directVideoSource) instance.play(); });
+  const { isPlaying } = useEvent(player, "playingChange", { isPlaying: player.playing });
+  const { error: directVideoError } = useEvent(player, "statusChange", { status: player.status });
+
+  const reportStreamStart = useCallback((playbackKind: "iframe" | "direct") => {
+    if (!channel || streamStartedRef.current === channel.id) return;
+    streamStartedRef.current = channel.id;
+    void trackAnalytics("stream_start", { channelId: channel.id, surface: "live-tv", playbackKind });
+  }, [channel]);
+  const reportStreamError = useCallback((playbackKind: "iframe" | "direct") => {
+    if (!channel || streamErrorRef.current === channel.id) return;
+    streamErrorRef.current = channel.id;
+    void trackAnalytics("stream_error", { channelId: channel.id, surface: "live-tv", playbackKind });
+  }, [channel]);
+
+  useEffect(() => {
+    if (!channel || openedChannelRef.current === channel.id) return;
+    openedChannelRef.current = channel.id;
+    void trackAnalytics("player_open", { channelId: channel.id, surface: "live-tv", sourceKind: channel.sourceKind });
+  }, [channel]);
+  useEffect(() => { if (channel?.sourceKind === "video" && isPlaying) reportStreamStart("direct"); }, [channel?.sourceKind, isPlaying, reportStreamStart]);
+  useEffect(() => { if (channel?.sourceKind === "video" && directVideoError) reportStreamError("direct"); }, [channel?.sourceKind, directVideoError, reportStreamError]);
 
   const playerView = channel ? channel.sourceKind === "video" ? (
     <VideoView player={player} style={{ width: "100%", aspectRatio: 16 / 9 }} contentFit="contain" allowsFullscreen allowsPictureInPicture />
-  ) : <IframePlayer uri={channel.src} /> : <Text style={{ color: "#9AA6BE", textAlign: "center" }}>Loading channel…</Text>;
+  ) : <IframePlayer uri={channel.src} onReady={() => reportStreamStart("iframe")} onError={() => reportStreamError("iframe")} /> : <Text style={{ color: "#9AA6BE", textAlign: "center" }}>Loading channel…</Text>;
   return (
     <ScreenContainer edges={["top", "bottom", "left", "right"]} containerClassName="bg-black" className="px-3">
       <View style={{ flexDirection: "row", alignItems: "center", paddingVertical: 10 }}>
@@ -38,7 +64,7 @@ export default function ChannelPlayerScreen() {
       <Modal visible={immersive} onRequestClose={() => setImmersive(false)} animationType="fade" supportedOrientations={["portrait", "landscape"]}>
         <View style={{ flex: 1, backgroundColor: "#000", justifyContent: "center" }}>
           <View style={{ position: "absolute", zIndex: 2, top: 44, right: 18 }}><Pressable onPress={() => setImmersive(false)} style={{ backgroundColor: "rgba(20,27,44,0.92)", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 }} accessibilityLabel="Exit full screen"><Text style={{ color: "#F7F8FC", fontWeight: "800" }}>Done</Text></Pressable></View>
-          <View style={{ width: "100%", aspectRatio: 16 / 9 }}>{channel?.sourceKind === "video" ? <VideoView player={player} style={{ width: "100%", height: "100%" }} contentFit="contain" allowsFullscreen allowsPictureInPicture /> : channel ? <IframePlayer uri={channel.src} /> : null}</View>
+          <View style={{ width: "100%", aspectRatio: 16 / 9 }}>{channel?.sourceKind === "video" ? <VideoView player={player} style={{ width: "100%", height: "100%" }} contentFit="contain" allowsFullscreen allowsPictureInPicture /> : channel ? <IframePlayer uri={channel.src} onReady={() => reportStreamStart("iframe")} onError={() => reportStreamError("iframe")} /> : null}</View>
         </View>
       </Modal>
     </ScreenContainer>

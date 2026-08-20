@@ -1,6 +1,7 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, gte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
+  analyticsEvents,
   InsertUser,
   ownerControlAudit,
   ownerControlConfig,
@@ -175,4 +176,82 @@ export async function listOwnerControlAudit(limit = 30) {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(ownerControlAudit).orderBy(desc(ownerControlAudit.createdAt)).limit(limit);
+}
+
+const ALLOWED_ANALYTICS_EVENTS = new Set([
+  "app_activate", "app_open", "screen_view", "tab_view", "search", "category_filter",
+  "event_open", "player_open", "stream_start", "stream_error", "source_switch",
+  "favorite_toggle", "share_event", "match_center_open", "support_tap", "ad_impression",
+  "ad_tap", "prediction_set", "reminder_set", "app_invite_share", "notification_open",
+]);
+
+function limitedText(value: unknown, maximum: number) {
+  return typeof value === "string" ? value.trim().slice(0, maximum) || null : null;
+}
+
+export type AnalyticsIngestInput = {
+  anonymousInstallHash: string;
+  eventName: string;
+  surface?: string;
+  contentId?: string;
+  countryCode?: string;
+  platform?: string;
+  properties?: Record<string, string | number | boolean>;
+};
+
+export async function recordAnalyticsEvent(input: AnalyticsIngestInput) {
+  if (!ALLOWED_ANALYTICS_EVENTS.has(input.eventName)) throw new Error("Unsupported analytics event");
+  const db = await getDb();
+  if (!db) throw new Error("Analytics storage is unavailable");
+  const countryCode = limitedText(input.countryCode, 2)?.toUpperCase();
+  const properties = input.properties && Object.keys(input.properties).length
+    ? JSON.stringify(Object.fromEntries(Object.entries(input.properties).slice(0, 12).map(([key, value]) => [key.slice(0, 40), typeof value === "string" ? value.slice(0, 120) : value])))
+    : null;
+  await db.insert(analyticsEvents).values({
+    anonymousInstallHash: input.anonymousInstallHash,
+    eventName: input.eventName,
+    dateKey: new Date().toISOString().slice(0, 10),
+    surface: limitedText(input.surface, 48),
+    contentId: limitedText(input.contentId, 160),
+    countryCode: countryCode && /^[A-Z]{2}$/.test(countryCode) ? countryCode : null,
+    platform: limitedText(input.platform, 16),
+    properties,
+  });
+}
+
+function rankedCounts(values: Array<string | null>, limit = 12) {
+  const counts = new Map<string, number>();
+  values.filter((value): value is string => Boolean(value)).forEach((value) => counts.set(value, (counts.get(value) ?? 0) + 1));
+  return Array.from(counts, ([key, count]) => ({ key, count })).sort((a, b) => b.count - a.count || a.key.localeCompare(b.key)).slice(0, limit);
+}
+
+/** Owner-only aggregate report. It deliberately contains no raw analytics rows or installation hashes. */
+export async function getAnalyticsSummary(days = 30) {
+  const db = await getDb();
+  if (!db) throw new Error("Analytics storage is unavailable");
+  const safeDays = Math.max(1, Math.min(Math.floor(days), 90));
+  const since = new Date(Date.now() - (safeDays - 1) * 86_400_000).toISOString().slice(0, 10);
+  const rows = await db.select().from(analyticsEvents).where(gte(analyticsEvents.dateKey, since)).orderBy(desc(analyticsEvents.createdAt)).limit(20_000);
+  const daily = new Map<string, { date: string; events: number; activeDevices: Set<string>; streamStarts: number; playerOpens: number; searches: number }>();
+  rows.forEach((row) => {
+    const value = daily.get(row.dateKey) ?? { date: row.dateKey, events: 0, activeDevices: new Set<string>(), streamStarts: 0, playerOpens: 0, searches: 0 };
+    value.events += 1; value.activeDevices.add(row.anonymousInstallHash);
+    if (row.eventName === "stream_start") value.streamStarts += 1;
+    if (row.eventName === "player_open") value.playerOpens += 1;
+    if (row.eventName === "search") value.searches += 1;
+    daily.set(row.dateKey, value);
+  });
+  return {
+    days: safeDays,
+    totalEvents: rows.length,
+    activeDevices: new Set(rows.map((row) => row.anonymousInstallHash)).size,
+    activations: rows.filter((row) => row.eventName === "app_activate").length,
+    streamStarts: rows.filter((row) => row.eventName === "stream_start").length,
+    playerOpens: rows.filter((row) => row.eventName === "player_open").length,
+    daily: Array.from(daily.values()).map(({ activeDevices, ...row }) => ({ ...row, activeDevices: activeDevices.size })).sort((a, b) => a.date.localeCompare(b.date)),
+    byEvent: rankedCounts(rows.map((row) => row.eventName)),
+    byCountry: rankedCounts(rows.map((row) => row.countryCode)),
+    bySurface: rankedCounts(rows.map((row) => row.surface)),
+    topContent: rankedCounts(rows.map((row) => row.contentId)),
+  };
 }

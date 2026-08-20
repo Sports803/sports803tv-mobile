@@ -96,17 +96,51 @@
     });
   }
 
+  function renderAnalyticsRows(targetId, rows, emptyMessage) {
+    const target = $(targetId);
+    target.replaceChildren();
+    if (!rows.length) { const empty = document.createElement("li"); empty.className = "analytics-empty"; empty.textContent = emptyMessage; target.append(empty); return; }
+    rows.forEach((row) => { const item = document.createElement("li"); item.className = "analytics-row"; const key = document.createElement("span"); key.textContent = row.key; const count = document.createElement("b"); count.textContent = Number(row.count || 0).toLocaleString(); item.append(key, count); target.append(item); });
+  }
+
+  function renderAnalytics(summary) {
+    const ids = ["analytics-active-devices", "analytics-total-events", "analytics-activations", "analytics-stream-starts", "analytics-player-opens"];
+    if (!summary) {
+      ids.forEach((id) => { $(id).textContent = "Unavailable"; });
+      $("analytics-period").textContent = "Temporarily unavailable";
+      renderAnalyticsRows("analytics-countries", [], "Analytics storage is not available yet.");
+      renderAnalyticsRows("analytics-events", [], "Analytics storage is not available yet.");
+      $("analytics-daily").replaceChildren();
+      return;
+    }
+    $("analytics-active-devices").textContent = Number(summary.activeDevices || 0).toLocaleString();
+    $("analytics-total-events").textContent = Number(summary.totalEvents || 0).toLocaleString();
+    $("analytics-activations").textContent = Number(summary.activations || 0).toLocaleString();
+    $("analytics-stream-starts").textContent = Number(summary.streamStarts || 0).toLocaleString();
+    $("analytics-player-opens").textContent = Number(summary.playerOpens || 0).toLocaleString();
+    $("analytics-period").textContent = `Last ${Number(summary.days || 30)} days`;
+    renderAnalyticsRows("analytics-countries", Array.isArray(summary.byCountry) ? summary.byCountry : [], "No consented regional activity yet.");
+    renderAnalyticsRows("analytics-events", Array.isArray(summary.byEvent) ? summary.byEvent : [], "No consented activity yet.");
+    const dailyTarget = $("analytics-daily");
+    dailyTarget.replaceChildren();
+    const daily = Array.isArray(summary.daily) ? summary.daily.slice(-14) : [];
+    if (!daily.length) { const empty = document.createElement("p"); empty.className = "analytics-empty"; empty.textContent = "Daily activity appears after a viewer opts in."; dailyTarget.append(empty); return; }
+    const highest = Math.max(1, ...daily.map((row) => Number(row.events || 0)));
+    daily.forEach((row) => { const item = document.createElement("div"); item.className = "analytics-daily-row"; const label = document.createElement("span"); const date = document.createElement("span"); date.textContent = row.date; const detail = document.createElement("b"); detail.textContent = `${Number(row.events || 0).toLocaleString()} events · ${Number(row.activeDevices || 0).toLocaleString()} devices`; label.append(date, detail); const bar = document.createElement("div"); bar.className = "analytics-bar"; const fill = document.createElement("i"); fill.style.width = `${Math.max(2, Math.round((Number(row.events || 0) / highest) * 100))}%`; bar.append(fill); item.append(label, bar); dailyTarget.append(item); });
+  }
+
   function showError(error) { setStatus(error instanceof Error ? error.message : "Something went wrong."); }
 
   async function load() {
     if (!token()) { dashboard.hidden = true; loginCard.hidden = false; logout.hidden = true; return; }
     try {
-      const [configResponse, auditResponse] = await Promise.all([api("/api/admin/control-config"), api("/api/admin/control-audit")]);
+      const [configResponse, auditResponse, analyticsResponse] = await Promise.all([api("/api/admin/control-config"), api("/api/admin/control-audit"), api("/api/admin/analytics/summary")]);
       if (!configResponse.ok || !auditResponse.ok) throw new Error("Your owner session has expired. Please sign in again.");
       config = (await configResponse.json()).config || [];
       const logs = (await auditResponse.json()).audit || [];
+      const analytics = analyticsResponse.ok ? (await analyticsResponse.json()).summary : null;
       $("audit-list").replaceChildren(...logs.map((entry) => { const item = document.createElement("li"); item.textContent = `${entry.action}: ${entry.configKey}`; return item; }));
-      fillForms(); dashboard.hidden = false; loginCard.hidden = true; logout.hidden = false; setStatus("Dashboard ready. Changes appear when the app refreshes.");
+      renderAnalytics(analytics); fillForms(); dashboard.hidden = false; loginCard.hidden = true; logout.hidden = false; setStatus("Dashboard ready. Changes appear when the app refreshes.");
     } catch (error) { sessionStorage.removeItem(TOKEN_KEY); dashboard.hidden = true; loginCard.hidden = false; logout.hidden = true; showError(error); }
   }
 

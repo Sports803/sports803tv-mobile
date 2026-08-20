@@ -223,7 +223,7 @@ function HeroMatchCard({ event, onOpen, width }: { event: SportsEvent; onOpen: (
 }
 
 function NewsArticleCard({ article, width }: { article: BloggerArticle; width: number }) {
-  return <Pressable onPress={() => void Linking.openURL(article.href)} style={({ pressed }) => ({ width, borderRadius: 16, overflow: "hidden", backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.border, marginBottom: 10, opacity: pressed ? 0.8 : 1 })}>
+  return <Pressable onPress={() => { void trackAnalytics("event_open", { contentId: article.id, surface: "news" }); void Linking.openURL(article.href); }} style={({ pressed }) => ({ width, borderRadius: 16, overflow: "hidden", backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.border, marginBottom: 10, opacity: pressed ? 0.8 : 1 })}>
     {article.imageUrl ? <Image source={{ uri: article.imageUrl }} style={{ width: "100%", height: width * 0.62, backgroundColor: palette.elevated }} resizeMode="cover" /> : <View style={{ height: width * 0.42, backgroundColor: "#1D1730", padding: 12, justifyContent: "flex-end" }}><Text style={{ color: palette.red, fontWeight: "900", fontSize: 11 }}>{article.category.toUpperCase()}</Text></View>}
     <View style={{ padding: 11 }}><Text style={{ color: palette.muted, fontSize: 10, fontWeight: "900", marginBottom: 5 }}>{article.category.toUpperCase()}</Text><Text style={{ color: palette.text, fontSize: 13, lineHeight: 18, fontWeight: "800" }} numberOfLines={3}>{article.title}</Text>{article.summary ? <Text style={{ color: palette.muted, fontSize: 11, lineHeight: 16, marginTop: 7 }} numberOfLines={3}>{article.summary}</Text> : null}</View>
   </Pressable>;
@@ -270,6 +270,7 @@ export default function HomeScreen() {
   const [newsArticles, setNewsArticles] = useState<BloggerArticle[]>([]);
   const load = useCallback(async (forceOwnerControls = false) => { setError(""); try { const [nextEvents, nextControls] = await Promise.all([fetchEvents(), fetchOwnerControls(forceOwnerControls)]); setEvents(nextEvents); setOwnerControls(nextControls); const newsConfig = ownerNewsFeed(nextControls); if (newsConfig.enabled) { try { const remote = await fetchBloggerArticles(newsConfig.sourceUrl, newsConfig.maxItems); const combined = [...newsConfig.curated, ...remote].filter((article, index, list) => list.findIndex((candidate) => candidate.href === article.href) === index); setNewsArticles(combined.slice(0, newsConfig.maxItems)); } catch { setNewsArticles(newsConfig.curated); } } else setNewsArticles([]); } catch (e) { setError(e instanceof Error ? e.message : "Could not load events"); } finally { setLoading(false); setRefreshing(false); } }, []);
   useEffect(() => { void Promise.all([load(), getFavorites().then(setFavorites), getHistory().then(setHistory), getTeamFavorites().then(setTeamFavorites), getLeagueFavorites().then(setLeagueFavorites)]); }, [load]);
+  useEffect(() => { void trackAnalytics("tab_view", { surface: "home" }); }, []);
   useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(timer); }, []);
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -301,12 +302,12 @@ export default function HomeScreen() {
   const liveNow = useMemo(() => filtered.filter((event) => eventStatus(event, now) === "live").slice(0, homeLayout.liveLimit), [filtered, now, homeLayout.liveLimit]);
   const fixtureEvents = useMemo(() => filtered.filter((event) => eventStatus(event, now) === "upcoming").slice(0, homeLayout.fixtureLimit), [filtered, now, homeLayout.fixtureLimit]);
   const recent = history.flatMap((id) => { const event = events.find((item) => item.id === id); return event && eventStatus(event, now) !== "ended" ? [event] : []; });
-  const setFav = async (id: string) => setFavorites(await toggleFavorite(id));
+  const setFav = async (id: string) => { const next = await toggleFavorite(id); setFavorites(next); void trackAnalytics("favorite_toggle", { eventId: id, favorite: next.includes(id), surface: "home" }); };
   const gridGap = 10;
   const columns = viewportWidth >= 800 ? 3 : 2;
   const horizontalPadding = 32;
   const cardWidth = Math.max(142, (viewportWidth - horizontalPadding - gridGap * (columns - 1)) / columns);
-  const openEvent = (event: SportsEvent) => router.push({ pathname: "/player" as any, params: { eventId: event.id } });
+  const openEvent = (event: SportsEvent) => { void trackAnalytics("event_open", { eventId: event.id, category: event.category, surface: "home" }); router.push({ pathname: "/player" as any, params: { eventId: event.id } }); };
   const competitionNames = Array.from(new Set(events.map((event) => event.leagueName || event.competitionLabel).filter(Boolean) as string[])).slice(0, 10);
   const heroWidth = Math.max(260, viewportWidth - 56);
   const articleWidth = Math.max(145, (viewportWidth - 42) / 2);
